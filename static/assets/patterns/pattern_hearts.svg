@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#FFF5F7"/>
+  <!-- Hearts & Sparkles Pattern Tile -->
+  <g fill="#FF758F" opacity="0.85">
+    <!-- Heart 1 -->
+    <path d="M30,30 C30,22 18,18 18,28 C18,36 30,44 30,44 C30,44 42,36 42,28 C42,18 30,22 30,30 Z" transform="scale(0.8) translate(5, 5)"/>
+    <!-- Heart 2 -->
+    <path d="M90,85 C90,77 78,73 78,83 C78,91 90,99 90,99 C90,99 102,91 102,83 C102,73 90,77 90,85 Z" transform="scale(0.7) translate(30, 25)"/>
+  </g>
+  <g fill="#FF4D6D" opacity="0.75">
+    <!-- Heart 3 small -->
+    <path d="M85,25 C85,19 76,16 76,24 C76,30 85,36 85,36 C85,36 94,30 94,24 C94,16 85,19 85,25 Z" transform="scale(0.6) translate(45, 10)"/>
+    <!-- Heart 4 small -->
+    <path d="M35,90 C35,84 26,81 26,89 C26,95 35,101 35,101 C35,101 44,95 44,89 C44,81 35,84 35,90 Z" transform="scale(0.55) translate(15, 60)"/>
+  </g>
+  <!-- Sparkles & Tiny dots -->
+  <g fill="#FFA8BA" opacity="0.8">
+    <circle cx="60" cy="18" r="3"/>
+    <circle cx="15" cy="70" r="2.5"/>
+    <circle cx="105" cy="55" r="3"/>
+    <circle cx="60" cy="100" r="2.5"/>
+    <!-- Star sparkle -->
+    <path d="M60,55 L62,60 L67,62 L62,64 L60,69 L58,64 L53,62 L58,60 Z" fill="#FF85A1"/>
+    <path d="M10,105 L11,108 L14,109 L11,110 L10,113 L9,110 L6,109 L9,108 Z" fill="#FFA8BA"/>
+    <path d="M110,15 L111,18 L114,19 L111,20 L110,23 L109,20 L106,19 L109,18 Z" fill="#FFA8BA"/>
+  </g>
+</svg>
+

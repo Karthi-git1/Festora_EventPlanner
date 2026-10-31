@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Festora — Modern Celebration & Wedding Planner</title>
+  <meta name="description" content="Plan your dream celebration with an Asana-inspired checklist and live AI assistant, monthly calendar, budget tracker, and authentic page-turning keepsake diary.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="kitty-cozy">
+
+  <div class="app-layout">
+    <!-- ========================================== -->
+    <!-- LEFT SIDEBAR (CHATGPT-STYLE EVENT NAV) -->
+    <!-- ========================================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <span class="brand-title">Festora</span>
+        </div>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Toggle Sidebar">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+      </div>
+
+      <!-- Main Navigation Menu (The Four Primary Sections) -->
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-item active" data-tab="dashboard">
+            <a href="#dashboard" class="nav-link">
+              <i class="fa-solid fa-house-chimney-window"></i>
+              <span class="nav-text">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item" data-tab="events">
+            <a href="#events" class="nav-link">
+              <i class="fa-solid fa-calendar-star"></i>
+              <span class="nav-text">My Events</span>
+              <span class="nav-badge" id="badgeEventsCount">0</span>
+            </a>
+          </li>
+          <li class="nav-item" data-tab="copilot">
+            <a href="#copilot" class="nav-link">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span class="nav-text">AI Copilot</span>
+              <span class="nav-badge special-badge">Smart</span>
+            </a>
+          </li>
+          <li class="nav-item" data-tab="settings">
+            <a href="#settings" class="nav-link">
+              <i class="fa-solid fa-gear"></i>
+              <span class="nav-text">Settings</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Visual Section Separator -->
+      <div class="sidebar-divider"></div>
+
+      <!-- Positioned Below the Four Sections: + New Celebration Button -->
+      <div class="sidebar-action-wrap">
+        <button class="sidebar-new-event-btn" id="sidebarNewEventBtn" title="Create a new celebration workspace">
+          <i class="fa-solid fa-plus"></i>
+          <span>New Celebration</span>
+        </button>
+      </div>
+
+      <!-- Positioned Below the Four Sections: Your Celebrations List -->
+      <div class="sidebar-events-section">
+        <div class="sidebar-section-header">
+          <span class="ssh-title">Your Celebrations</span>
+          <span class="ssh-count" id="sidebarEventsBadge">0</span>
+        </div>
+        <div class="sidebar-events-list" id="sidebarEventsList">
+          <!-- Dynamically populated via JS like ChatGPT conversation list -->
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="sidebar-theme-indicator" id="sidebarThemeTrigger" title="Change Theme in Settings">
+          <span class="theme-dot-active" id="sidebarThemeDot"></span>
+          <span class="theme-name-text" id="sidebarThemeName">Cozy Kitty Theme</span>
+          <i class="fa-solid fa-palette"></i>
+        </div>
+        <div class="sidebar-quote-tag">
+          <span>✨ Celebrate Every Moment</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- MAIN CONTENT AREA -->
+    <!-- ========================================== -->
+    <main class="main-content" id="mainContent">
+      <!-- TOP NAVIGATION BAR (CLEAN & MINIMALIST) -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-toggle-btn" id="mobileToggleBtn" title="Toggle Navigation">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <span id="currentSectionTitle" style="display: none;"></span>
+          <span id="topbarEventHeading" style="display: none;"></span>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Clean & minimalist topbar: all actions shifted to sidebar and workspace hero -->
+        </div>
+      </header>
+
+      <!-- TAB SECTIONS CONTAINER -->
+      <div class="tab-content-container">
+
+        <!-- ========================================== -->
+        <!-- 1. DASHBOARD: EVENT OVERVIEW & MONTHLY CALENDAR -->
+        <!-- ========================================== -->
+        <section class="tab-pane active" id="tab-dashboard">
+
+          <!-- Empty State: Displayed when 0 events exist -->
+          <div class="empty-dashboard-welcome card-panel" id="emptyDashboardWelcome" style="display: none;">
+            <div class="edw-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <h2 class="edw-title">Welcome to Festora</h2>
+            <p class="edw-subtitle">Your AI-Powered Personal Celebration & Event Organizer</p>
+            <p class="edw-desc">No celebration workspace has been created yet. You can build your own event from scratch, or simply tell Festora AI what you want to plan!</p>
+            <div class="edw-actions">
+              <button class="btn btn-primary" id="btnEdwCreate">
+                <i class="fa-solid fa-plus-circle"></i> Create Celebration Workspace
+              </button>
+              <button class="btn btn-outline" id="btnEdwAi">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Plan with Festora AI
+              </button>
+            </div>
+          </div>
+          
+          <!-- Event Overview Hero Banner -->
+          <div class="event-hero-banner" id="eventHeroBanner">
+            <div class="ehb-left">
+              <div class="ehb-tag-row">
+                <span class="ehb-badge" id="heroEventType">Celebration</span>
+                <span class="ehb-countdown-badge" id="heroCountdownBadge">⏳ Date TBD</span>
+              </div>
+              <h1 class="ehb-title" id="heroEventTitle">My Celebration</h1>
+              <div class="ehb-meta-row">
+                <span class="ehb-meta-item"><i class="fa-regular fa-calendar"></i> <span id="heroEventDate">Date TBD</span></span>
+                <span class="ehb-meta-item"><i class="fa-solid fa-location-dot"></i> <span id="heroEventLocation">Location TBD</span></span>
+                <span class="ehb-meta-item"><i class="fa-solid fa-user-group"></i> <span id="heroEventGuests">0 Guests</span></span>
+                <span class="ehb-meta-item"><i class="fa-solid fa-stopwatch"></i> Duration: <span id="heroEventDuration">1 Day Event</span></span>
+              </div>
+            </div>
+            <div class="ehb-right">
+              <button class="btn btn-outline btn-sm" id="btnHeroEditEvent">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+              <button class="btn btn-outline btn-sm" id="btnHeroSwitchEvent">
+                <i class="fa-solid fa-arrows-rotate"></i> Switch
+              </button>
+              <button class="btn btn-outline btn-sm btn-danger-subtle" id="btnHeroDeleteEvent" title="Delete this celebration workspace">
+                <i class="fa-solid fa-trash-can"></i> Delete
+              </button>
+              <button class="btn btn-primary btn-sm" id="btnHeroAddTask">
+                <i class="fa-solid fa-plus"></i> Add Milestone
+              </button>
+            </div>
+          </div>
+
+          <!-- Workspace Sub-Navigation Bar -->
+          <nav class="workspace-subnav-bar" id="workspaceSubnavBar">
+            <button class="ws-subnav-pill active" data-ws-pane="overview">
+              <i class="fa-solid fa-calendar-days"></i> Overview & Calendar
+            </button>
+            <button class="ws-subnav-pill" data-ws-pane="tasks">
+              <i class="fa-solid fa-list-check"></i> Tasks & Checklist
+            </button>
+            <button class="ws-subnav-pill" data-ws-pane="budget">
+              <i class="fa-solid fa-wallet"></i> Budget Optimizer
+            </button>
+            <button class="ws-subnav-pill" data-ws-pane="timeline">
+              <i class="fa-solid fa-timeline"></i> Timeline
+            </button>
+            <button class="ws-subnav-pill" data-ws-pane="guests">
+              <i class="fa-solid fa-user-group"></i> Guests & RSVPs
+            </button>
+            <button class="ws-subnav-pill" data-ws-pane="vendors">
+              <i class="fa-solid fa-handshake"></i> Vendors & Contracts
+            </button>
+            <button class="ws-subnav-pill" data-ws-pane="notes">
+              <i class="fa-solid fa-lightbulb"></i> Notes & Inspiration
+            </button>
+            <button class="ws-subnav-pill" data-ws-pane="diary">
+              <i class="fa-solid fa-book-bookmark"></i> Keepsake Diary
+            </button>
+          </nav>
+
+          <!-- SUB-PANE 1: EVENT OVERVIEW & MONTHLY CALENDAR -->
+          <div class="ws-pane active" id="ws-pane-overview">
+            <!-- 4 Key Overview Metrics Cards -->
+            <div class="overview-metrics-grid" id="overviewMetricsGrid">
+              <!-- Card 1: Budget -->
+              <div class="overview-metric-card">
+                <div class="omc-header">
+                  <span class="omc-label">Budget Status</span>
+                  <span class="omc-icon-badge" style="background: rgba(140, 83, 62, 0.12); color: var(--color-primary);">💰</span>
+                </div>
+                <div class="omc-value" id="omcBudgetValue">₹3,00,000</div>
+                <div class="omc-subtext" id="omcBudgetSubtext">₹80,000 spent • ₹2,20,000 remaining</div>
+                <div class="omc-progress-track">
+                  <div class="omc-progress-bar" id="omcBudgetBar" style="width: 27%;"></div>
+                </div>
+              </div>
+
+              <!-- Card 2: Tasks Checklist -->
+              <div class="overview-metric-card">
+                <div class="omc-header">
+                  <span class="omc-label">Planning Checklist</span>
+                  <span class="omc-icon-badge" style="background: rgba(40, 167, 69, 0.12); color: #28A745;">✅</span>
+                </div>
+                <div class="omc-value" id="omcTasksValue">3 / 7 Done</div>
+                <div class="omc-subtext" id="omcTasksSubtext">4 milestones pending</div>
+                <div class="omc-progress-track">
+                  <div class="omc-progress-bar" id="omcTasksBar" style="width: 43%; background: #28A745;"></div>
+                </div>
+              </div>
+
+              <!-- Card 3: Guests -->
+              <div class="overview-metric-card">
+                <div class="omc-header">
+                  <span class="omc-label">Guest Attendance</span>
+                  <span class="omc-icon-badge" style="background: rgba(212, 136, 36, 0.15); color: #D48824;">👥</span>
+                </div>
+                <div class="omc-value" id="omcGuestsValue">300 Guests</div>
+                <div class="omc-subtext" id="omcGuestsSubtext">RSVPs actively tracking</div>
+                <div class="omc-progress-track">
+                  <div class="omc-progress-bar" id="omcGuestsBar" style="width: 80%; background: #D48824;"></div>
+                </div>
+              </div>
+
+              <!-- Card 4: Vendors -->
+              <div class="overview-metric-card">
+                <div class="omc-header">
+                  <span class="omc-label">Key Vendors</span>
+                  <span class="omc-icon-badge" style="background: rgba(107, 91, 149, 0.15); color: #6B5B95;">🤝</span>
+                </div>
+                <div class="omc-value" id="omcVendorsValue">3 Booked</div>
+                <div class="omc-subtext" id="omcVendorsSubtext">Catering, Decor & Photo locked</div>
+                <div class="omc-progress-track">
+                  <div class="omc-progress-bar" id="omcVendorsBar" style="width: 100%; background: #6B5B95;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- UPCOMING REMINDERS & DEADLINES WIDGET (SECTION 4) -->
+            <div class="reminders-card-panel card-panel" id="remindersPanel">
+              <div class="reminders-header">
+                <div class="reminders-header-left">
+                  <i class="fa-solid fa-bell reminders-icon"></i>
+                  <div>
+                    <h3 class="reminders-title">Upcoming Reminders & Deadlines</h3>
+                    <p class="reminders-subtitle">Never miss vendor deposits, venue visits, or RSVP confirmations</p>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-xs" id="btnOpenAddReminder">
+                  <i class="fa-solid fa-plus"></i> Add Reminder
+                </button>
+              </div>
+              <div class="reminders-list" id="remindersList">
+                <!-- Dynamically populated via JS -->
+              </div>
+            </div>
+
+          <div class="calendar-dashboard-wrap">
+            
+            <!-- Calendar Navigation & Controls Bar -->
+            <div class="cal-dashboard-header card-panel">
+              <div class="cal-header-left">
+                <button class="btn-cal-arrow" id="calPrevMonth" title="Previous Month">
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h2 class="cal-current-month-heading" id="calMonthLabel">November 2026</h2>
+                <button class="btn-cal-arrow" id="calNextMonth" title="Next Month">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button class="btn btn-outline btn-xs" id="calTodayBtn">Today</button>
+              </div>
+
+              <div class="cal-header-right">
+                <div class="cal-month-legend">
+                  <span class="cal-legend-dot"></span>
+                  <span class="cal-legend-text">Planned milestone (Hover date to view details)</span>
+                </div>
+                <div class="cal-stat-pill" id="calTotalPlansPill">
+                  <i class="fa-solid fa-calendar-check"></i>
+                  <span id="calTotalPlansCount">0 plans scheduled</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Neatly Aligned Monthly Calendar Grid -->
+            <div class="calendar-neat-card card-panel">
+              <!-- Weekday Header Row -->
+              <div class="cal-neat-weekdays">
+                <div class="weekday-col">Sun</div>
+                <div class="weekday-col">Mon</div>
+                <div class="weekday-col">Tue</div>
+                <div class="weekday-col">Wed</div>
+                <div class="weekday-col">Thu</div>
+                <div class="weekday-col">Fri</div>
+                <div class="weekday-col">Sat</div>
+              </div>
+
+              <!-- Monthly Days Grid (Generated Dynamically via JS) -->
+              <div class="cal-neat-days-grid" id="calendarDaysGrid">
+                <!-- Day cells rendered here -->
+              </div>
+            </div>
+
+          </div>
+        </div><!-- end #ws-pane-overview -->
+
+        <!-- ========================================== -->
+        <!-- SUB-PANE 2: TASKS & CHECKLIST (ASANA LAYOUT) -->
+        <!-- ========================================== -->
+        <div class="ws-pane" id="ws-pane-tasks">
+          <div class="asana-planner-layout">
+            
+            <!-- LEFT PANE: CHECKLIST & TO-DO LIST -->
+            <div class="planner-left-pane card-panel">
+              <!-- Toolbar -->
+              <div class="pl-toolbar">
+                <div class="pl-toolbar-left">
+                  <button class="btn btn-primary btn-sm" id="btnPaneAddTask">
+                    <i class="fa-solid fa-plus"></i> Add Task
+                  </button>
+                  <div class="custom-select-wrap">
+                    <select id="taskViewFilter" class="task-view-select">
+                      <option value="incomplete">View: Incomplete Tasks</option>
+                      <option value="all">View: All Tasks</option>
+                      <option value="completed">View: Completed Tasks</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="pl-toolbar-right">
+                  <div class="pl-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="plannerSearchInput" placeholder="Filter tasks..." class="pl-search-input">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Category Filter Chips -->
+              <div class="pl-cat-chips-row" id="plannerCatChips">
+                <button class="cat-chip active" data-cat="all">All</button>
+                <button class="cat-chip" data-cat="Venue">Venue</button>
+                <button class="cat-chip" data-cat="Catering">Catering</button>
+                <button class="cat-chip" data-cat="Decor">Decor</button>
+                <button class="cat-chip" data-cat="Attire">Attire</button>
+                <button class="cat-chip" data-cat="Media">Photo</button>
+                <button class="cat-chip" data-cat="Music">Music</button>
+                <button class="cat-chip" data-cat="Stationery">Stationery</button>
+              </div>
+
+              <!-- Asana-Style Tasks List -->
+              <div class="asana-tasks-list" id="asanaTasksList">
+                <!-- Loaded via JS -->
+              </div>
+            </div>
+
+          </div>
+        </div><!-- end #ws-pane-tasks -->
+
+        <!-- ========================================== -->
+        <!-- SUB-PANE 3: BUDGET OPTIMIZER -->
+        <!-- ========================================== -->
+        <div class="ws-pane" id="ws-pane-budget">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Budget Optimizer</h2>
+              <p class="section-subtitle">Track allocated amount and actual spend for every celebration category.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-primary btn-sm" id="btnOpenAddBudget">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Category</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Budget Banner -->
+          <div class="budget-stat-banner card-panel">
+            <div class="budget-kpi">
+              <span class="bk-label">Target Budget</span>
+              <span class="bk-value" id="budgetTargetValue">₹3,00,000</span>
+            </div>
+            <div class="bk-divider"></div>
+            <div class="budget-kpi">
+              <span class="bk-label">Total Allocated</span>
+              <span class="bk-value" id="budgetAllocatedValue">₹3,00,000</span>
+              <span class="bk-tag" id="budgetAllocatedTag">100% of target</span>
+            </div>
+            <div class="bk-divider"></div>
+            <div class="budget-kpi">
+              <span class="bk-label">Total Spent to Date</span>
+              <span class="bk-value text-accent" id="budgetSpentValue">₹2,24,500</span>
+              <span class="bk-tag success" id="budgetRemainingTag">₹75,500 Buffer Remaining</span>
+            </div>
+          </div>
+
+          <!-- Budget Warning Alert (Shows if expenses exceed budget) -->
+          <div class="budget-warning-alert" id="budgetWarningAlert" style="display: none;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="budgetWarningText">Notice: Some categories have exceeded their planned budget allocation.</span>
+          </div>
+
+          <!-- Category Breakdown Table -->
+          <div class="card-panel">
+            <div class="table-responsive">
+              <table class="table-custom">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Allocated</th>
+                    <th>Spent</th>
+                    <th>Remaining</th>
+                    <th>Notes & Deliverables</th>
+                    <th width="90">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="budgetTableBody">
+                  <!-- Loaded via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div><!-- end #ws-pane-budget -->
+
+        <!-- ========================================== -->
+        <!-- SUB-PANE 4: EVENT TIMELINE -->
+        <!-- ========================================== -->
+        <div class="ws-pane" id="ws-pane-timeline">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Event Timeline & Milestones</h2>
+              <p class="section-subtitle">Chronological planning phases leading up to the celebration day.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-primary btn-sm" id="btnOpenAddTimeline">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Milestone</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-panel">
+            <div class="timeline-phases-flow" id="timelinePhasesList">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+        </div><!-- end #ws-pane-timeline -->
+
+        <!-- ========================================== -->
+        <!-- SUB-PANE 5: GUEST MANAGEMENT & RSVPS -->
+        <!-- ========================================== -->
+        <div class="ws-pane" id="ws-pane-guests">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Guest Management & RSVPs</h2>
+              <p class="section-subtitle">Manage guest invites, attendee counts, RSVP responses and dietary needs.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-primary btn-sm" id="btnOpenAddGuest">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Add Guest</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Guests KPI Banner -->
+          <div class="overview-metrics-grid" style="margin-bottom: 20px;">
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Total Invited</span>
+              <div class="omc-value" id="kpiGuestsTotal">0</div>
+              <div class="omc-subtext">Invited party contacts</div>
+            </div>
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Confirmed RSVPs</span>
+              <div class="omc-value" style="color: #28A745;" id="kpiGuestsConfirmed">0</div>
+              <div class="omc-subtext">Confirmed attending</div>
+            </div>
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Pending RSVPs</span>
+              <div class="omc-value" style="color: #D48824;" id="kpiGuestsPending">0</div>
+              <div class="omc-subtext">Awaiting reply</div>
+            </div>
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Total Headcount</span>
+              <div class="omc-value" style="color: var(--color-primary);" id="kpiGuestsHeadcount">0</div>
+              <div class="omc-subtext">Including family +1s</div>
+            </div>
+          </div>
+
+          <!-- Guests Data Table -->
+          <div class="festora-table-container">
+            <table class="festora-data-table">
+              <thead>
+                <tr>
+                  <th>Guest / Family</th>
+                  <th>Contact Info</th>
+                  <th>Category</th>
+                  <th>Attending</th>
+                  <th>RSVP Status</th>
+                  <th>Dietary & Notes</th>
+                  <th width="80">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="guestsTableBody">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div><!-- end #ws-pane-guests -->
+
+        <!-- ========================================== -->
+        <!-- SUB-PANE 6: VENDOR MANAGEMENT & CONTRACTS -->
+        <!-- ========================================== -->
+        <div class="ws-pane" id="ws-pane-vendors">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Vendor Directory & Contracts</h2>
+              <p class="section-subtitle">Keep track of vendor contacts, quotes, advance payments and booking status.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-primary btn-sm" id="btnOpenAddVendor">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Vendor</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Vendors KPI Banner -->
+          <div class="overview-metrics-grid" style="margin-bottom: 20px;">
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Total Vendors</span>
+              <div class="omc-value" id="kpiVendorsCount">0</div>
+              <div class="omc-subtext">Service partners</div>
+            </div>
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Total Quoted</span>
+              <div class="omc-value" id="kpiVendorsQuoted">₹0</div>
+              <div class="omc-subtext">Total contractual costs</div>
+            </div>
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Advance Paid</span>
+              <div class="omc-value" style="color: #28A745;" id="kpiVendorsPaid">₹0</div>
+              <div class="omc-subtext">Deposits handed over</div>
+            </div>
+            <div class="overview-metric-card" style="padding: 16px 20px;">
+              <span class="omc-label">Balance Outstanding</span>
+              <div class="omc-value" style="color: #D32F2F;" id="kpiVendorsBalance">₹0</div>
+              <div class="omc-subtext">Due on completion</div>
+            </div>
+          </div>
+
+          <!-- Vendors Data Table -->
+          <div class="festora-table-container">
+            <table class="festora-data-table">
+              <thead>
+                <tr>
+                  <th>Vendor Partner</th>
+                  <th>Service Category</th>
+                  <th>Contact Details</th>
+                  <th>Quoted Cost</th>
+                  <th>Advance Paid</th>
+                  <th>Remaining Due</th>
+                  <th>Status</th>
+                  <th width="80">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vendorsTableBody">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div><!-- end #ws-pane-vendors -->
+
+        <!-- ========================================== -->
+        <!-- SUB-PANE 7: NOTES & INSPIRATION -->
+        <!-- ========================================== -->
+        <div class="ws-pane" id="ws-pane-notes">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Notes & Creative Inspiration</h2>
+              <p class="section-subtitle">Save decoration ideas, mood palettes, vendor details, and shopping lists.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-primary btn-sm" id="btnOpenAddNote">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Note</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Notes Cards Grid -->
+          <div class="notes-cards-grid" id="notesCardsGrid">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div><!-- end #ws-pane-notes -->
+
+        <!-- ========================================== -->
+        <!-- SUB-PANE 8: KEEPSAKE DIARY -->
+        <!-- ========================================== -->
+        <div class="ws-pane" id="ws-pane-diary">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Keepsake Event Diary</h2>
+              <p class="section-subtitle">An authentic keepsake journal where pages turn like a real diary. Capture milestones and vows.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-outline btn-sm" id="btnPrintDiary">
+                <i class="fa-solid fa-print"></i>
+                <span>Print Keepsake</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pattern Frame Selection Bar (ONLY in Diary!) -->
+          <div class="diary-patterns-bar card-panel">
+            <div class="pattern-bar-heading">
+              <i class="fa-solid fa-paint-roller"></i>
+              <span>Select Stationery Pattern Frame:</span>
+            </div>
+            <div class="pattern-cards-row">
+              <div class="pat-pill active" data-pattern="pattern_kitty.png">
+                <img src="assets/patterns/pattern_kitty.png" alt="Cozy Kitty">
+                <div class="pat-pill-info">
+                  <span class="pp-title">🐱 Cozy Kitty</span>
+                  <span class="pp-sub">Default warm peach</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_hearts.svg">
+                <img src="assets/patterns/pattern_hearts.svg" alt="Sweet Hearts">
+                <div class="pat-pill-info">
+                  <span class="pp-title">💖 Sweet Hearts</span>
+                  <span class="pp-sub">Blush pink romance</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_check.svg">
+                <img src="assets/patterns/pattern_check.svg" alt="Pastel Gingham">
+                <div class="pat-pill-info">
+                  <span class="pp-title">🪻 Pastel Gingham</span>
+                  <span class="pp-sub">Lilac & cream check</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_stars.svg">
+                <img src="assets/patterns/pattern_stars.svg" alt="Golden Stars">
+                <div class="pat-pill-info">
+                  <span class="pp-title">✨ Celestial Stars</span>
+                  <span class="pp-sub">Midnight & gold</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_floral.svg">
+                <img src="assets/patterns/pattern_floral.svg" alt="Spring Blossom">
+                <div class="pat-pill-info">
+                  <span class="pp-title">🌸 Spring Blossom</span>
+                  <span class="pp-sub">Blush & sage vines</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_polka.svg">
+                <img src="assets/patterns/pattern_polka.svg" alt="Peach Confetti">
+                <div class="pat-pill-info">
+                  <span class="pp-title">🍑 Peach Confetti</span>
+                  <span class="pp-sub">Celebration polka dots</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_lavender.svg">
+                <img src="assets/patterns/pattern_lavender.svg" alt="Lavender Herbs">
+                <div class="pat-pill-info">
+                  <span class="pp-title">🌿 Lavender Herbs</span>
+                  <span class="pp-sub">Delicate violet flora</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_lotus.png">
+                <img src="assets/patterns/pattern_lotus.png" alt="Lotus Pond">
+                <div class="pat-pill-info">
+                  <span class="pp-title">🪷 Lotus Pond</span>
+                  <span class="pp-sub">Emerald water lilies</span>
+                </div>
+              </div>
+              <div class="pat-pill" data-pattern="pattern_duckling.png">
+                <img src="assets/patterns/pattern_duckling.png" alt="Sunny Duckling">
+                <div class="pat-pill-info">
+                  <span class="pp-title">🦆 Sunny Duckling</span>
+                  <span class="pp-sub">Buttercup yellow & blue</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- AUTHENTIC OPEN BOOK SPREAD WITH PAGE TURNING -->
+          <!-- ============================================== -->
+          <div class="diary-book-wrapper" id="diaryBookSpread">
+            <!-- Bookmark Ribbon -->
+            <div class="book-ribbon"></div>
+
+            <div class="diary-open-book" id="diaryBookContainer">
+              
+              <!-- LEFT PAGE: TABLE OF CONTENTS / JOURNAL HISTORY -->
+              <div class="book-page book-page-left" id="diaryLeftPage">
+                <div class="page-inner left-inner">
+                  <div class="left-page-header">
+                    <span class="toc-badge"><i class="fa-solid fa-bookmark"></i> JOURNAL CHAPTERS</span>
+                    <h3 class="left-page-title">Table of Memories</h3>
+                  </div>
+
+                  <!-- List of book entries -->
+                  <div class="book-chapters-list" id="bookChaptersList">
+                    <!-- Populated via JS -->
+                  </div>
+
+                  <div class="page-footer-left">
+                    <span class="page-num-tag" id="leftPageNumber">Page 1</span>
+                    <button class="btn-new-sheet" id="btnTurnNewPage">
+                      <i class="fa-solid fa-feather-pointed"></i> + New Blank Page
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BOOK SPINE -->
+              <div class="book-spine"></div>
+
+              <!-- RIGHT PAGE: WRITING PARCHMENT WITH PATTERN BORDER -->
+              <div class="book-page book-page-right" id="diaryRightPage">
+                <div class="diary-stationery-frame" id="diaryStationeryFrame" style="background-image: url('assets/patterns/pattern_kitty.png');">
+                  <div class="diary-parchment-canvas">
+                    <div class="diary-top-meta">
+                      <div class="diary-date-field">
+                        <i class="fa-regular fa-calendar-heart"></i>
+                        <input type="date" id="diaryInputDate" class="diary-date-input">
+                      </div>
+                      <div class="diary-mood-picker">
+                        <span class="mood-picker-label">Mood:</span>
+                        <select id="diarySelectMood" class="diary-mood-select">
+                          <option value="🥰 Overjoyed">🥰 Overjoyed</option>
+                          <option value="✨ Inspired" selected>✨ Inspired</option>
+                          <option value="🥂 Celebratory">🥂 Celebratory</option>
+                          <option value="💭 Sentimental">💭 Sentimental</option>
+                          <option value="💖 Deeply Grateful">💖 Deeply Grateful</option>
+                          <option value="🌸 Peaceful">🌸 Peaceful</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="diary-title-wrap">
+                      <input type="text" id="diaryInputTitle" class="diary-title-input" placeholder="Title this chapter or memory...">
+                    </div>
+
+                    <div class="diary-body-wrap">
+                      <textarea id="diaryInputContent" class="diary-textarea-lined" rows="10" placeholder="Write your thoughts, milestones, reflections, or vows here..."></textarea>
+                    </div>
+
+                    <div class="diary-sheet-actions">
+                      <span class="diary-save-status" id="diarySaveNotice">Ready to write</span>
+                      <button class="btn btn-primary" id="btnSaveDiaryEntry">
+                        <i class="fa-solid fa-heart"></i>
+                        <span>Save to Journal</span>
+                      </button>
+                    </div>
+
+                    <div class="page-footer-right">
+                      <span class="page-num-tag" id="rightPageNumber">Page 2</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Page Turn Navigation Controls -->
+            <div class="book-turn-controls">
+              <button class="btn-turn-page" id="btnPrevPage">
+                <i class="fa-solid fa-arrow-left"></i> Previous Page
+              </button>
+              <span class="book-page-indicator" id="bookPageIndicator">📖 Page 1 of 1</span>
+              <button class="btn-turn-page" id="btnNextPage">
+                Next Page <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div><!-- end #ws-pane-diary -->
+      </section><!-- end #tab-dashboard (EVENT WORKSPACE) -->
+
+      <!-- ========================================== -->
+      <!-- 2. MY EVENTS: ALL EVENTS MANAGEMENT HUB -->
+      <!-- ========================================== -->
+      <section class="tab-pane" id="tab-events">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">My Celebrations & Events Hub</h2>
+            <p class="section-subtitle">Manage all your events, switch workspaces, edit details, or create new celebrations.</p>
+          </div>
+          <div class="header-action-group">
+            <button class="btn btn-primary btn-sm" id="btnHubCreateEvent">
+              <i class="fa-solid fa-folder-plus"></i>
+              <span>Create New Event</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="events-manager-grid" id="eventsManagerGrid">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- 3. FESTORA AI COPILOT: DEDICATED STRATEGIST -->
+      <!-- ========================================== -->
+      <section class="tab-pane" id="tab-copilot">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">Festora AI Copilot & Event Strategist</h2>
+            <p class="section-subtitle">Autonomous event coordinator powered by AI and real-time live venue and vendor intelligence.</p>
+          </div>
+          <div class="header-action-group">
+            <button class="btn btn-outline btn-sm" id="btnDedicatedAiReset" title="Reset Conversation">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Clear Chat</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dedicated AI Chat Card -->
+        <div class="card-panel" style="padding: 24px; display: flex; flex-direction: column; min-height: 560px;">
+          <!-- Active Event Context Bar -->
+          <div class="ehb-meta-row" style="background: var(--bg-card-subtle); padding: 12px 18px; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border-light); justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span style="font-weight: 700; font-size: 0.85rem; color: var(--color-primary);"><i class="fa-solid fa-crosshairs"></i> Active Context:</span>
+              <span id="copilotActiveEventName" style="font-weight: 600; font-size: 0.85rem;">My Cousin's Marriage</span>
+              <span class="ehb-badge" id="copilotActiveEventType">Wedding</span>
+              <span style="font-size: 0.82rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> <span id="copilotActiveLocation">Chennai</span></span>
+              <span style="font-size: 0.82rem; color: var(--text-muted);"><i class="fa-solid fa-wallet"></i> <span id="copilotActiveBudget">₹3,00,000</span></span>
+            </div>
+            <div>
+              <span class="ehb-countdown-badge" style="background: rgba(40,167,69,0.12); color:#28A745; font-size: 0.78rem;">● Live Intelligence Ready</span>
+            </div>
+          </div>
+
+          <!-- Smart Suggestion Action Chips -->
+          <div class="ai-action-chips" style="margin-bottom: 18px;">
+            <button class="ai-chip-action" id="chipDedicatedVenues" data-dedicated-prompt="🔍 Suggest best wedding reception venues in Chennai with pricing, capacity, and facilities">
+              <span id="chipDedicatedVenuesLabel">🏛️ Venues in Chennai</span>
+            </button>
+            <button class="ai-chip-action" id="chipDedicatedEstimate" data-dedicated-prompt="💰 Estimate realistic budget breakdown for 300 guests with category allocations">
+              <span id="chipDedicatedEstimateLabel">💰 300-Guest Budget Breakdown</span>
+            </button>
+            <button class="ai-chip-action" data-dedicated-prompt="🌸 Suggest elegant decor & floral themes for this celebration with stage lighting ideas">
+              <span>🌸 Decor & Themes</span>
+            </button>
+            <button class="ai-chip-action" data-dedicated-prompt="🍽️ Provide traditional catering menu recommendations and cost-saving tips">
+              <span>🍽️ Catering & Menus</span>
+            </button>
+            <button class="ai-chip-action" data-dedicated-prompt="⚡ Add task: Finalize stage backdrop & photobooth design before Nov 15">
+              <span>⚡ Add Stage Decor Task</span>
+            </button>
+          </div>
+
+          <!-- AI Messages Stream -->
+          <div class="ai-conversation-stream" id="dedicatedAiStream" style="flex: 1; min-height: 360px; max-height: 500px; overflow-y: auto; padding-right: 6px;">
+            <div class="ai-chat-item ai-response">
+              <div class="chat-avatar-mini"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+              <div class="chat-text">
+                <p><strong>Hello! I am your Festora AI Event Copilot.</strong></p>
+                <p>I have full context on <em><span id="copilotStreamEventName">your active celebration</span></em>. I can:</p>
+                <ul style="margin: 8px 0; padding-left: 20px;">
+                  <li><strong>Perform live web research</strong> on real venues, halls, caterers & photographers with real pricing & contact links.</li>
+                  <li><strong>Generate instant cost estimates</strong> with 1-click export into your Budget Optimizer.</li>
+                  <li><strong>Directly execute changes</strong>: add tasks, update budget, adjust guest counts, or create reminders.</li>
+                </ul>
+                <p>Click any quick prompt above or ask me anything below!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Composer Bar -->
+          <div class="ai-composer-bar" style="margin-top: 16px;">
+            <input type="text" id="dedicatedAiInput" class="ai-composer-input" placeholder="Ask AI to research venues, estimate costs, or perform actions..." autocomplete="off">
+            <button class="btn btn-primary ai-composer-btn" id="btnDedicatedAiSend">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- 4. SETTINGS TAB (CLEAN, NO BUILT-IN FORM) -->
+      <!-- ========================================== -->
+      <section class="tab-pane" id="tab-settings">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Planner Settings</h2>
+              <p class="section-subtitle">Personalize your color palette ambiance and visual preferences.</p>
+            </div>
+          </div>
+
+          <!-- THEME COLOR PALETTE SELECTION -->
+          <div class="card-panel settings-card-block">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title"><i class="fa-solid fa-palette"></i> Color Theme Mood</h3>
+                <p class="panel-subtitle">Select an aesthetic palette to change the ambiance across the entire app.</p>
+              </div>
+              <span class="badge-accent-soft" id="activeThemeBadge">Active: Cozy Kitty</span>
+            </div>
+
+            <div class="theme-mood-cards-grid">
+              <!-- Kitty (Default) -->
+              <div class="theme-mood-card active" data-theme="kitty-cozy">
+                <div class="tmc-preview kitty-bg">
+                  <span class="tmc-icon">🐱</span>
+                  <span class="tmc-tag">Default</span>
+                </div>
+                <div class="tmc-content">
+                  <h4 class="tmc-title">Cozy Kitty</h4>
+                  <p class="tmc-desc">Warm peach, biscuit & cinnamon cozy warmth.</p>
+                  <div class="tmc-swatches">
+                    <span style="background: #8C533E;"></span>
+                    <span style="background: #D9A08B;"></span>
+                    <span style="background: #F2D2C6;"></span>
+                    <span style="background: #FAF4EF;"></span>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-apply-theme">Active</button>
+              </div>
+
+              <!-- Sunny Duckling -->
+              <div class="theme-mood-card" data-theme="duckling-sunny">
+                <div class="tmc-preview duckling-bg">
+                  <span class="tmc-icon">🦆</span>
+                </div>
+                <div class="tmc-content">
+                  <h4 class="tmc-title">Sunny Duckling</h4>
+                  <p class="tmc-desc">Buttercup yellow, gingham & sky blue cheerfulness.</p>
+                  <div class="tmc-swatches">
+                    <span style="background: #D48824;"></span>
+                    <span style="background: #F5B041;"></span>
+                    <span style="background: #4A90E2;"></span>
+                    <span style="background: #FFFDF7;"></span>
+                  </div>
+                </div>
+                <button class="btn btn-outline btn-sm btn-apply-theme">Apply</button>
+              </div>
+
+              <!-- Soft Lavender -->
+              <div class="theme-mood-card" data-theme="lavender-soft">
+                <div class="tmc-preview lavender-bg">
+                  <span class="tmc-icon">🪻</span>
+                </div>
+                <div class="tmc-content">
+                  <h4 class="tmc-title">Soft Lavender</h4>
+                  <p class="tmc-desc">Gentle lilac, herbal violet & serene parchment white.</p>
+                  <div class="tmc-swatches">
+                    <span style="background: #6B5B95;"></span>
+                    <span style="background: #9D84B7;"></span>
+                    <span style="background: #D8B4E2;"></span>
+                    <span style="background: #F8F6FD;"></span>
+                  </div>
+                </div>
+                <button class="btn btn-outline btn-sm btn-apply-theme">Apply</button>
+              </div>
+
+              <!-- Midnight Starry -->
+              <div class="theme-mood-card" data-theme="midnight-luxe">
+                <div class="tmc-preview midnight-bg">
+                  <span class="tmc-icon">🌙</span>
+                </div>
+                <div class="tmc-content">
+                  <h4 class="tmc-title">Midnight Starry</h4>
+                  <p class="tmc-desc">Celestial dark navy & shimmering champagne gold glow.</p>
+                  <div class="tmc-swatches">
+                    <span style="background: #C59B27;"></span>
+                    <span style="background: #3B5998;"></span>
+                    <span style="background: #151C28;"></span>
+                    <span style="background: #0D111A;"></span>
+                  </div>
+                </div>
+                <button class="btn btn-outline btn-sm btn-apply-theme">Apply</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clean Preferences (NO technical jargon, NO built-in form) -->
+          <div class="card-panel settings-card-block">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title"><i class="fa-solid fa-sliders"></i> Display Preferences</h3>
+                <p class="panel-subtitle">Tailor the planner appearance to your liking.</p>
+              </div>
+            </div>
+
+            <div class="settings-options-list">
+              <div class="setting-row-toggle">
+                <div>
+                  <h4 class="setting-title">Celebration Symbols on Calendar</h4>
+                  <p class="setting-desc">Display milestone icons (rings, florals, music) directly on calendar day tiles.</p>
+                </div>
+                <label class="switch-toggle">
+                  <input type="checkbox" id="toggleCalSymbols" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div class="setting-row-toggle">
+                <div>
+                  <h4 class="setting-title">Celebration Notifications</h4>
+                  <p class="setting-desc">Show subtle confirmation toasts when milestones and memories are saved.</p>
+                </div>
+                <label class="switch-toggle">
+                  <input type="checkbox" id="toggleToasts" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- CALENDAR HOVER TOOLTIP (POPOVER) -->
+  <!-- ========================================== -->
+  <div class="cal-popover-tooltip" id="calendarTooltip">
+    <div class="cpt-header">
+      <span class="cpt-date" id="cptDate">Nov 28, 2026</span>
+      <span class="cpt-count-badge" id="cptCountBadge">1 plan</span>
+    </div>
+    <div class="cpt-items-list" id="cptItemsList">
+      <!-- Populated via hover -->
+    </div>
+    <div class="cpt-footer">
+      <span class="cpt-hint">Click date to add task</span>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ADD / EDIT CHECKLIST TASK -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalAddTask">
+    <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-list-check modal-icon"></i>
+          <div>
+            <h3 class="modal-title" id="taskModalHeading">Add Task to Checklist</h3>
+            <p class="modal-subtitle">Will appear on your monthly calendar with hover details</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalAddTask">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formTask">
+          <input type="hidden" id="taskIdHidden">
+          
+          <div class="form-group">
+            <label class="form-label">Symbol</label>
+            <div class="symbol-picker-grid" id="taskSymbolPicker">
+              <button type="button" class="symbol-pick-btn active" data-symbol="💍">💍</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="🐱">🐱</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="🎂">🎂</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="🌸">🌸</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="💌">💌</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="🍽️">🍽️</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="🎵">🎵</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="📸">📸</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="✨">✨</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="☕">☕</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="💄">💄</button>
+              <button type="button" class="symbol-pick-btn" data-symbol="🏛️">🏛️</button>
+            </div>
+            <input type="hidden" id="taskSelectedSymbol" value="💍">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Task Title</label>
+            <input type="text" id="taskTitleInput" class="form-control" placeholder="e.g. Schedule final floral arch mockup" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Due Date</label>
+              <input type="date" id="taskDueDateInput" class="form-control" required>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Category</label>
+              <select id="taskCategoryInput" class="form-control">
+                <option value="Venue">Venue & Ceremony</option>
+                <option value="Catering">Catering & Bar</option>
+                <option value="Decor">Decor & Florals</option>
+                <option value="Attire">Attire & Beauty</option>
+                <option value="Media">Photo & Film</option>
+                <option value="Music">Music & DJ</option>
+                <option value="Stationery">Stationery & Invites</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes & Specifications (Optional)</label>
+            <textarea id="taskNotesInput" class="form-control" rows="3" placeholder="Key contact person, deliverable notes..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalAddTask">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitTask">Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ADD BUDGET ITEM -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalAddBudget">
+    <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-wallet modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Add Budget Category</h3>
+            <p class="modal-subtitle">Track allocated amount and actual spend</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalAddBudget">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formBudget">
+          <input type="hidden" id="budgetIdHidden">
+          <div class="form-group">
+            <label class="form-label">Category Name</label>
+            <input type="text" id="budgetCatInput" class="form-control" placeholder="e.g. Florals, Centerpieces & Arch" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Allocated Amount ($)</label>
+              <input type="number" id="budgetAllocInput" class="form-control" placeholder="3000" min="0" required>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Spent to Date ($)</label>
+              <input type="number" id="budgetSpentInput" class="form-control" placeholder="0" min="0" value="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <input type="text" id="budgetNotesInput" class="form-control" placeholder="e.g. Ceremony arch and 12 reception tables">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalAddBudget">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitBudget">Save Category</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: CREATE NEW EVENT (WIZARD) -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalCreateEvent">
+    <div class="modal-dialog" role="dialog" aria-modal="true" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-sparkles modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Create New Celebration</h3>
+            <p class="modal-subtitle">AI will generate custom planning categories, initial budget & starter checklist</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalCreateEvent">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formCreateEvent">
+          <div class="form-group">
+            <label class="form-label">Event Name</label>
+            <input type="text" id="newEventName" class="form-control" placeholder="e.g. My Cousin's Marriage, Aryan's 1st Birthday" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Event Type</label>
+              <select id="newEventType" class="form-control" required>
+                <option value="Wedding">Wedding</option>
+                <option value="Birthday">Birthday</option>
+                <option value="Anniversary">Anniversary</option>
+                <option value="Baby Shower">Baby Shower / Naming Ceremony</option>
+                <option value="Corporate">Corporate Conference / Seminar</option>
+                <option value="Party">Dinner Party / Reunion</option>
+                <option value="Other">Custom Celebration</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Event Date</label>
+              <input type="date" id="newEventDate" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Location / Venue City</label>
+              <input type="text" id="newEventLocation" class="form-control" placeholder="e.g. Taj Connemara, Chennai">
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Expected Guests</label>
+              <input type="number" id="newEventGuests" class="form-control" placeholder="300" min="1" value="150" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Total Budget</label>
+              <div style="display: flex; gap: 8px;">
+                <select id="newEventCurrency" class="form-control" style="max-width: 80px;">
+                  <option value="₹">₹</option>
+                  <option value="$">$</option>
+                  <option value="€">€</option>
+                  <option value="£">£</option>
+                </select>
+                <input type="number" id="newEventBudget" class="form-control" placeholder="300000" min="1000" value="300000" required>
+              </div>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Event Duration</label>
+              <select id="newEventDuration" class="form-control">
+                <option value="1 Day">1 Day</option>
+                <option value="2 Days">2 Days</option>
+                <option value="3 Days">3 Days</option>
+                <option value="Weekend">Full Weekend</option>
+                <option value="Half Day">Half Day / Evening</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dynamic Categories Preview -->
+          <div class="form-group">
+            <label class="form-label">Generated Planning Categories (Customized for selected type):</label>
+            <div class="cat-preview-pills-wrap" id="catPreviewPills">
+              <!-- Live tags preview -->
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Additional Notes & Vision (Optional)</label>
+            <textarea id="newEventNotes" class="form-control" rows="2" placeholder="e.g. Traditional morning ceremony followed by grand evening dinner reception..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalCreateEvent">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitCreateEvent">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Event Workspace
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ADD GUEST -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalAddGuest">
+    <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-user-plus modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Add Guest / Party</h3>
+            <p class="modal-subtitle">Track RSVP status and attendees headcount</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalAddGuest">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formGuest">
+          <input type="hidden" id="guestIdHidden">
+          <div class="form-group">
+            <label class="form-label">Guest / Family Name</label>
+            <input type="text" id="guestNameInput" class="form-control" placeholder="e.g. Venkatesh & Family" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Phone Number</label>
+              <input type="text" id="guestPhoneInput" class="form-control" placeholder="+91 98401 23456">
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="guestEmailInput" class="form-control" placeholder="guest@gmail.com">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">RSVP Status</label>
+              <select id="guestRsvpInput" class="form-control">
+                <option value="Confirmed">Confirmed</option>
+                <option value="Pending">Pending</option>
+                <option value="Declined">Declined</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Total Attendees Count</label>
+              <input type="number" id="guestCountInput" class="form-control" value="1" min="1" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Guest Category</label>
+              <select id="guestCategoryInput" class="form-control">
+                <option value="Family">Family</option>
+                <option value="Friends">Friends</option>
+                <option value="VIP">VIP</option>
+                <option value="Colleagues">Colleagues</option>
+                <option value="Neighbors">Neighbors</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Dietary / Special Needs</label>
+              <input type="text" id="guestDietaryInput" class="form-control" placeholder="e.g. Vegetarian feast">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalAddGuest">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitGuest">Save Guest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ADD VENDOR -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalAddVendor">
+    <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-handshake modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Add Vendor Partner</h3>
+            <p class="modal-subtitle">Track contract quotes and advance deposits</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalAddVendor">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formVendor">
+          <input type="hidden" id="vendorIdHidden">
+          <div class="form-group">
+            <label class="form-label">Vendor Business Name</label>
+            <input type="text" id="vendorNameInput" class="form-control" placeholder="e.g. Royal Mandap Decors" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Service Category</label>
+              <input type="text" id="vendorCategoryInput" class="form-control" placeholder="e.g. Decoration, Catering, Photography" required>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Contact Details</label>
+              <input type="text" id="vendorContactInput" class="form-control" placeholder="+91 99400 11223">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Quoted Price</label>
+              <input type="number" id="vendorQuotedInput" class="form-control" placeholder="45000" min="0" required>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Advance Paid</label>
+              <input type="number" id="vendorAdvanceInput" class="form-control" placeholder="15000" min="0" value="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Booking Status</label>
+            <select id="vendorStatusInput" class="form-control">
+              <option value="Booked">Booked & Confirmed</option>
+              <option value="In Talks">In Talks / Quoted</option>
+              <option value="Completed">Completed & Settled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deliverables & Notes</label>
+            <input type="text" id="vendorNotesInput" class="form-control" placeholder="e.g. Entrance floral arch, mandap backdrop & ambient spotlights">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalAddVendor">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitVendor">Save Vendor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ADD TIMELINE MILESTONE -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalAddTimeline">
+    <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-timeline modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Add Timeline Milestone</h3>
+            <p class="modal-subtitle">Add a key checkpoint to your celebration roadmap</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalAddTimeline">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formTimeline">
+          <input type="hidden" id="timelineIdHidden">
+          <div class="form-group">
+            <label class="form-label">Planning Phase Badge</label>
+            <select id="timelinePhaseInput" class="form-control">
+              <option value="3 Months Before">3 Months Before</option>
+              <option value="2 Months Before">2 Months Before</option>
+              <option value="1 Month Before">1 Month Before</option>
+              <option value="2 Weeks Before">2 Weeks Before</option>
+              <option value="1 Week Before">1 Week Before</option>
+              <option value="1 Day Before">1 Day Before</option>
+              <option value="Event Day">Event Day</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Milestone Title</label>
+            <input type="text" id="timelineTitleInput" class="form-control" placeholder="e.g. Confirm wedding floral arch design" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Due Date</label>
+            <input type="date" id="timelineDateInput" class="form-control" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalAddTimeline">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitTimeline">Save Milestone</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ADD NOTE / IDEA -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalAddNote">
+    <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-lightbulb modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Add Note or Idea</h3>
+            <p class="modal-subtitle">Save decoration ideas, shopping lists and reminders</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalAddNote">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formNote">
+          <input type="hidden" id="noteIdHidden">
+          <div class="form-group">
+            <label class="form-label">Note Title</label>
+            <input type="text" id="noteTitleInput" class="form-control" placeholder="e.g. Mandap Floral Palette Swatches" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category Tag</label>
+            <select id="noteTagInput" class="form-control">
+              <option value="Inspiration">Inspiration & Theme</option>
+              <option value="Decoration">Decoration & Ambiance</option>
+              <option value="Catering">Catering & Menu</option>
+              <option value="Shopping">Shopping Checklist</option>
+              <option value="Logistics">Logistics & Schedule</option>
+              <option value="Personal">Personal Reminders</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Note Content</label>
+            <textarea id="noteContentInput" class="form-control" rows="4" placeholder="Write thoughts, color codes, contact references..." required></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalAddNote">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitNote">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- FLOATING QUICK AI COPILOT BUTTON & DRAWER -->
+  <!-- ========================================== -->
+  <button class="floating-ai-copilot-btn" id="floatingAiBtn" title="Open AI Assistant">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+    <span>AI Copilot</span>
+  </button>
+
+  <div class="drawer-backdrop" id="floatingAiBackdrop"></div>
+  <div class="floating-ai-drawer" id="floatingAiDrawer">
+    <div class="drawer-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--color-primary);"></i>
+        <h3 style="font-size:1rem; font-weight:700; margin:0;">Festora Copilot</h3>
+        <span class="ehb-badge" id="floatingAiContextBadge" style="font-size:0.7rem; padding:2px 8px;">Workspace</span>
+      </div>
+      <button class="drawer-close-btn" id="btnCloseFloatingAi">&times;</button>
+    </div>
+    <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-light); background: var(--bg-card-subtle);">
+      <div class="ai-action-chips" id="floatingAiQuickChips" style="margin: 0; gap: 6px; flex-wrap: wrap;">
+        <button class="ai-chip-action" data-floating-prompt="What are my top pending milestones for this celebration?">📌 Pending Tasks</button>
+        <button class="ai-chip-action" data-floating-prompt="Give me smart budget tips and cost-saving ideas for this event">💡 Budget Tips</button>
+        <button class="ai-chip-action" data-floating-prompt="What are upcoming vendor deadlines and reminders?">⏰ Reminders</button>
+      </div>
+    </div>
+    <div class="ai-conversation-stream" id="floatingAiStream" style="flex:1; overflow-y:auto; padding:16px;">
+      <div class="ai-chat-item ai-response">
+        <div class="chat-avatar-mini"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div class="chat-text">
+          <p><strong>Hi! I'm your Copilot companion.</strong></p>
+          <p>I know which section you're currently in and can take actions on this event instantly.</p>
+        </div>
+      </div>
+    </div>
+    <div class="ai-composer-bar" style="padding:14px 16px; border-top:1px solid var(--border-light);">
+      <input type="text" id="floatingAiInput" class="ai-composer-input" placeholder="Ask AI anything about your event...">
+      <button class="btn btn-primary ai-composer-btn" id="btnSendFloatingAi">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: EDIT EVENT DETAILS -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalEditEvent">
+    <div class="modal-dialog" role="dialog" aria-modal="true" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-pen-to-square modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Edit Celebration Details</h3>
+            <p class="modal-subtitle">Update event date, location, guest headcount, or total budget</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalEditEvent">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditEvent">
+          <input type="hidden" id="editEventIdHidden">
+          <div class="form-group">
+            <label class="form-label">Event Name</label>
+            <input type="text" id="editEventName" class="form-control" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Event Type</label>
+              <select id="editEventType" class="form-control" required>
+                <option value="Wedding">Wedding</option>
+                <option value="Birthday">Birthday</option>
+                <option value="Anniversary">Anniversary</option>
+                <option value="Baby Shower">Baby Shower / Naming Ceremony</option>
+                <option value="Corporate">Corporate Conference / Seminar</option>
+                <option value="Party">Dinner Party / Reunion</option>
+                <option value="Other">Custom Celebration</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Event Date</label>
+              <input type="date" id="editEventDate" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Location / Venue City</label>
+              <input type="text" id="editEventLocation" class="form-control">
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Expected Guests</label>
+              <input type="number" id="editEventGuests" class="form-control" min="1" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Total Budget</label>
+              <div style="display: flex; gap: 8px;">
+                <select id="editEventCurrency" class="form-control" style="max-width: 80px;">
+                  <option value="₹">₹</option>
+                  <option value="$">$</option>
+                  <option value="€">€</option>
+                  <option value="£">£</option>
+                </select>
+                <input type="number" id="editEventBudget" class="form-control" min="1000" required>
+              </div>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Event Duration</label>
+              <select id="editEventDuration" class="form-control">
+                <option value="1 Day">1 Day</option>
+                <option value="2 Days">2 Days</option>
+                <option value="3 Days">3 Days</option>
+                <option value="Weekend">Full Weekend</option>
+                <option value="Half Day">Half Day / Evening</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes & Vision</label>
+            <textarea id="editEventNotes" class="form-control" rows="2"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalEditEvent">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitEditEvent">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: ADD / EDIT REMINDER -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="modalAddReminder">
+    <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-bell modal-icon"></i>
+          <div>
+            <h3 class="modal-title" id="reminderModalHeading">Add Reminder</h3>
+            <p class="modal-subtitle">Set an upcoming deadline or critical notification</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" aria-label="Close dialog" data-close-modal="modalAddReminder">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formReminder">
+          <input type="hidden" id="reminderIdHidden">
+          <div class="form-group">
+            <label class="form-label">Reminder Title</label>
+            <input type="text" id="reminderTitleInput" class="form-control" placeholder="e.g. Pay 50% advance to catering vendor" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Due Date</label>
+              <input type="date" id="reminderDateInput" class="form-control" required>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Due Time</label>
+              <input type="time" id="reminderTimeInput" class="form-control" value="10:00">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select id="reminderPriorityInput" class="form-control">
+              <option value="High">🔴 High Priority</option>
+              <option value="Medium" selected>🟡 Medium Priority</option>
+              <option value="Low">🟢 Low Priority</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes / Instructions (Optional)</label>
+            <input type="text" id="reminderNotesInput" class="form-control" placeholder="e.g. Account number: 1234567890">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalAddReminder">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitReminder">Save Reminder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER (WCAG 2.1 Accessible Status Announcer) -->
+  <div class="toast-container" id="toastContainer" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- SCRIPTS -->
+  <script src="js/groq-service.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

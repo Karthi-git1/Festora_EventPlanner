@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#181E33"/>
+  <!-- Constellation dots & celestial golden stars -->
+  <g fill="#F3D37A">
+    <!-- Star 1 8-point -->
+    <path d="M25,25 L27,20 L29,25 L34,27 L29,29 L27,34 L25,29 L20,27 Z" opacity="0.9"/>
+    <!-- Star 2 4-point -->
+    <path d="M75,70 L77,63 L79,70 L86,72 L79,74 L77,81 L75,74 L68,72 Z" opacity="0.85"/>
+    <!-- Small star 3 -->
+    <path d="M80,20 L81,17 L82,20 L85,21 L82,22 L81,25 L80,22 L77,21 Z" opacity="0.75"/>
+    <!-- Small star 4 -->
+    <path d="M20,75 L21,72 L22,75 L25,76 L22,77 L21,80 L20,77 L17,76 Z" opacity="0.75"/>
+  </g>
+  <!-- Crescent Moon -->
+  <path d="M52,42 A10,10 0 0 0 58,58 A10,10 0 1 1 52,42 Z" fill="#FFE599" opacity="0.85"/>
+  <!-- Floating stardust dots -->
+  <circle cx="50" cy="15" r="1.5" fill="#FFF2BD" opacity="0.6"/>
+  <circle cx="90" cy="45" r="2" fill="#F3D37A" opacity="0.7"/>
+  <circle cx="10" cy="45" r="1.5" fill="#FFF2BD" opacity="0.6"/>
+  <circle cx="45" cy="85" r="2" fill="#F3D37A" opacity="0.8"/>
+  <circle cx="68" cy="35" r="1.2" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="32" cy="60" r="1.2" fill="#FFFFFF" opacity="0.7"/>
+</svg>
+
