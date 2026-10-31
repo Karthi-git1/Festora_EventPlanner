@@ -128,11 +128,17 @@
         <section class="tab-pane active" id="tab-dashboard">
 
           <!-- Empty State: Displayed when 0 events exist -->
-          <div class="empty-dashboard-welcome card-panel" id="emptyDashboardWelcome" style="display: none;">
+          <div class="empty-dashboard-welcome card-panel" id="emptyDashboardWelcome">
             <div class="edw-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
             <h2 class="edw-title">Welcome to Festora</h2>
             <p class="edw-subtitle">Your AI-Powered Personal Celebration & Event Organizer</p>
             <p class="edw-desc">No celebration workspace has been created yet. You can build your own event from scratch, or simply tell Festora AI what you want to plan!</p>
+            <div class="edw-features-preview">
+              <span class="edw-feat-pill"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Copilot Planning</span>
+              <span class="edw-feat-pill"><i class="fa-solid fa-list-check"></i> Asana Checklist</span>
+              <span class="edw-feat-pill"><i class="fa-solid fa-wallet"></i> Smart Budget Tracker</span>
+              <span class="edw-feat-pill"><i class="fa-solid fa-book-bookmark"></i> Keepsake Diary</span>
+            </div>
             <div class="edw-actions">
               <button class="btn btn-primary" id="btnEdwCreate">
                 <i class="fa-solid fa-plus-circle"></i> Create Celebration Workspace
@@ -143,8 +149,10 @@
             </div>
           </div>
           
-          <!-- Event Overview Hero Banner -->
-          <div class="event-hero-banner" id="eventHeroBanner">
+          <!-- Active Workspace Container: Hidden when 0 events exist -->
+          <div class="active-workspace-wrapper" id="activeWorkspaceWrapper" style="display: none;">
+            <!-- Event Overview Hero Banner -->
+            <div class="event-hero-banner" id="eventHeroBanner">
             <div class="ehb-left">
               <div class="ehb-tag-row">
                 <span class="ehb-badge" id="heroEventType">Celebration</span>
@@ -212,10 +220,10 @@
                   <span class="omc-label">Budget Status</span>
                   <span class="omc-icon-badge" style="background: rgba(140, 83, 62, 0.12); color: var(--color-primary);">💰</span>
                 </div>
-                <div class="omc-value" id="omcBudgetValue">₹3,00,000</div>
-                <div class="omc-subtext" id="omcBudgetSubtext">₹80,000 spent • ₹2,20,000 remaining</div>
+                <div class="omc-value" id="omcBudgetValue">₹0</div>
+                <div class="omc-subtext" id="omcBudgetSubtext">₹0 spent • ₹0 remaining</div>
                 <div class="omc-progress-track">
-                  <div class="omc-progress-bar" id="omcBudgetBar" style="width: 27%;"></div>
+                  <div class="omc-progress-bar" id="omcBudgetBar" style="width: 0%;"></div>
                 </div>
               </div>
 
@@ -225,10 +233,10 @@
                   <span class="omc-label">Planning Checklist</span>
                   <span class="omc-icon-badge" style="background: rgba(40, 167, 69, 0.12); color: #28A745;">✅</span>
                 </div>
-                <div class="omc-value" id="omcTasksValue">3 / 7 Done</div>
-                <div class="omc-subtext" id="omcTasksSubtext">4 milestones pending</div>
+                <div class="omc-value" id="omcTasksValue">0 / 0 Done</div>
+                <div class="omc-subtext" id="omcTasksSubtext">0 milestones pending</div>
                 <div class="omc-progress-track">
-                  <div class="omc-progress-bar" id="omcTasksBar" style="width: 43%; background: #28A745;"></div>
+                  <div class="omc-progress-bar" id="omcTasksBar" style="width: 0%; background: #28A745;"></div>
                 </div>
               </div>
 
@@ -238,10 +246,10 @@
                   <span class="omc-label">Guest Attendance</span>
                   <span class="omc-icon-badge" style="background: rgba(212, 136, 36, 0.15); color: #D48824;">👥</span>
                 </div>
-                <div class="omc-value" id="omcGuestsValue">300 Guests</div>
-                <div class="omc-subtext" id="omcGuestsSubtext">RSVPs actively tracking</div>
+                <div class="omc-value" id="omcGuestsValue">0 Guests</div>
+                <div class="omc-subtext" id="omcGuestsSubtext">RSVPs ready</div>
                 <div class="omc-progress-track">
-                  <div class="omc-progress-bar" id="omcGuestsBar" style="width: 80%; background: #D48824;"></div>
+                  <div class="omc-progress-bar" id="omcGuestsBar" style="width: 0%; background: #D48824;"></div>
                 </div>
               </div>
 
@@ -251,10 +259,10 @@
                   <span class="omc-label">Key Vendors</span>
                   <span class="omc-icon-badge" style="background: rgba(107, 91, 149, 0.15); color: #6B5B95;">🤝</span>
                 </div>
-                <div class="omc-value" id="omcVendorsValue">3 Booked</div>
-                <div class="omc-subtext" id="omcVendorsSubtext">Catering, Decor & Photo locked</div>
+                <div class="omc-value" id="omcVendorsValue">0 Booked</div>
+                <div class="omc-subtext" id="omcVendorsSubtext">No vendors added yet</div>
                 <div class="omc-progress-track">
-                  <div class="omc-progress-bar" id="omcVendorsBar" style="width: 100%; background: #6B5B95;"></div>
+                  <div class="omc-progress-bar" id="omcVendorsBar" style="width: 0%; background: #6B5B95;"></div>
                 </div>
               </div>
             </div>
@@ -400,12 +408,12 @@
           <div class="budget-stat-banner card-panel">
             <div class="budget-kpi">
               <span class="bk-label">Target Budget</span>
-              <span class="bk-value" id="budgetTargetValue">₹3,00,000</span>
+              <span class="bk-value" id="budgetTargetValue">₹0</span>
             </div>
             <div class="bk-divider"></div>
             <div class="budget-kpi">
               <span class="bk-label">Total Allocated</span>
-              <span class="bk-value" id="budgetAllocatedValue">₹3,00,000</span>
+              <span class="bk-value" id="budgetAllocatedValue">₹0</span>
               <span class="bk-tag" id="budgetAllocatedTag">100% of target</span>
             </div>
             <div class="bk-divider"></div>
@@ -799,6 +807,7 @@
             </div>
           </div>
         </div><!-- end #ws-pane-diary -->
+          </div><!-- end #activeWorkspaceWrapper -->
       </section><!-- end #tab-dashboard (EVENT WORKSPACE) -->
 
       <!-- ========================================== -->
@@ -849,7 +858,7 @@
               <span id="copilotActiveEventName" style="font-weight: 600; font-size: 0.85rem;">My Cousin's Marriage</span>
               <span class="ehb-badge" id="copilotActiveEventType">Wedding</span>
               <span style="font-size: 0.82rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> <span id="copilotActiveLocation">Chennai</span></span>
-              <span style="font-size: 0.82rem; color: var(--text-muted);"><i class="fa-solid fa-wallet"></i> <span id="copilotActiveBudget">₹3,00,000</span></span>
+              <span style="font-size: 0.82rem; color: var(--text-muted);"><i class="fa-solid fa-wallet"></i> <span id="copilotActiveBudget">₹0</span></span>
             </div>
             <div>
               <span class="ehb-countdown-badge" style="background: rgba(40,167,69,0.12); color:#28A745; font-size: 0.78rem;">● Live Intelligence Ready</span>

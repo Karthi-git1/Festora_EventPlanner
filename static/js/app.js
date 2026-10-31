@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.sidebarEventsBadge = document.getElementById('sidebarEventsBadge');
       this.topbarEventHeading = document.getElementById('topbarEventHeading');
       this.emptyDashboardWelcome = document.getElementById('emptyDashboardWelcome');
+      this.activeWorkspaceWrapper = document.getElementById('activeWorkspaceWrapper');
       this.btnEdwCreate = document.getElementById('btnEdwCreate');
       this.btnEdwAi = document.getElementById('btnEdwAi');
       this.btnTopbarAskAi = document.getElementById('btnTopbarAskAi');
@@ -654,6 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Gracefully handle 0 events
       if (!this.activeEvent || this.events.length === 0) {
         if (this.emptyDashboardWelcome) this.emptyDashboardWelcome.style.display = 'block';
+        if (this.activeWorkspaceWrapper) this.activeWorkspaceWrapper.style.display = 'none';
         if (this.eventHeroBanner) this.eventHeroBanner.style.display = 'none';
         if (this.workspaceSubnavBar) this.workspaceSubnavBar.style.display = 'none';
         if (this.topbarEventHeading) this.topbarEventHeading.textContent = 'No Celebration Selected';
@@ -665,6 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Active event exists
       if (this.emptyDashboardWelcome) this.emptyDashboardWelcome.style.display = 'none';
+      if (this.activeWorkspaceWrapper) this.activeWorkspaceWrapper.style.display = 'block';
       if (this.eventHeroBanner) this.eventHeroBanner.style.display = 'flex';
       if (this.workspaceSubnavBar) this.workspaceSubnavBar.style.display = 'flex';
       if (this.topbarEventHeading) this.topbarEventHeading.textContent = this.activeEvent.name;

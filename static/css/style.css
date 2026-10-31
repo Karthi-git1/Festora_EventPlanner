@@ -534,6 +534,34 @@ body {
   line-height: 1.6;
 }
 
+.edw-features-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 26px auto;
+  max-width: 620px;
+}
+
+.edw-feat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-light);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.edw-feat-pill i {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+}
+
 .edw-actions {
   display: flex;
   align-items: center;
