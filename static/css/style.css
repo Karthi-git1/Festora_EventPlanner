@@ -6891,3 +6891,425 @@ input:checked + .slider:before {
 .drawer-backdrop.show {
   display: block;
 }
+
+
+/* ==========================================================================
+   MOBILE & TOUCH PHONE RESPONSIVENESS ENHANCEMENTS
+   ========================================================================== */
+
+/* Sidebar Mobile Backdrop */
+.sidebar-mobile-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(18, 12, 10, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.sidebar-mobile-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+body.sidebar-mobile-locked {
+  overflow: hidden !important;
+}
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Sidebar Drawer */
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -310px !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 1001 !important;
+    box-shadow: 4px 0 28px rgba(0, 0, 0, 0.45) !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .sidebar.mobile-open {
+    left: 0 !important;
+  }
+
+  /* Main Content & Topbar */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .topbar {
+    padding: 10px 14px !important;
+    min-height: 56px !important;
+  }
+
+  .mobile-toggle-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+
+  .tab-content-container {
+    padding: 14px 12px 60px 12px !important;
+  }
+
+  /* Event Hero Banner */
+  .event-hero-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 16px !important;
+    gap: 16px !important;
+  }
+
+  .ehb-title {
+    font-size: 1.45rem !important;
+    line-height: 1.25 !important;
+    word-break: break-word !important;
+  }
+
+  .ehb-meta-row {
+    flex-wrap: wrap !important;
+    gap: 8px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .ehb-right {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .ehb-right .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.82rem !important;
+    padding: 8px 10px !important;
+  }
+
+  /* Workspace Subnav Bar Touch Scroll */
+  .workspace-subnav-bar {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    white-space: nowrap !important;
+    padding: 6px 2px 10px 2px !important;
+    gap: 8px !important;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 16px !important;
+  }
+
+  .workspace-subnav-bar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .ws-subnav-pill {
+    flex-shrink: 0 !important;
+    padding: 8px 14px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* 4 Overview Metrics Cards */
+  .overview-metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .overview-metric-card {
+    padding: 14px 14px !important;
+  }
+
+  .omc-value {
+    font-size: 1.25rem !important;
+  }
+
+  /* Monthly Calendar Controls */
+  .cal-dashboard-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px 16px !important;
+  }
+
+  .cal-header-left {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  .cal-current-month-heading {
+    font-size: 1.1rem !important;
+  }
+
+  .cal-header-right {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .cal-month-legend {
+    font-size: 0.75rem !important;
+  }
+
+  .cal-stat-pill {
+    font-size: 0.75rem !important;
+    padding: 4px 10px !important;
+  }
+
+  /* Calendar Grid & Days */
+  .cal-neat-weekdays {
+    gap: 3px !important;
+    padding: 6px 0 !important;
+  }
+
+  .weekday-col {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+  }
+
+  .cal-neat-days-grid {
+    gap: 3px !important;
+  }
+
+  .cal-day-tile {
+    min-height: 56px !important;
+    padding: 4px 3px !important;
+    border-radius: 6px !important;
+  }
+
+  .tile-top-row {
+    margin-bottom: 2px !important;
+  }
+
+  .tile-day-num {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .tile-badge-dot {
+    width: 6px !important;
+    height: 6px !important;
+  }
+
+  .tile-symbol-chip {
+    font-size: 0.72rem !important;
+    padding: 1px 3px !important;
+  }
+
+  /* Category Filter Chips */
+  .planner-cat-chips {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    white-space: nowrap !important;
+    padding: 4px 2px 8px 2px !important;
+    gap: 6px !important;
+  }
+
+  .planner-cat-chips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .cat-chip {
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Asana Task Row Clean Layout */
+  .asana-task-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+
+  .task-main-info {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .task-title-group {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .task-title-text {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    font-size: 0.88rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .task-meta-right {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    width: 100% !important;
+    padding-top: 6px !important;
+    border-top: 1px dashed var(--border-light) !important;
+  }
+
+  .task-cat-pill, .priority-flag {
+    display: inline-flex !important;
+    font-size: 0.72rem !important;
+    padding: 2px 6px !important;
+  }
+
+  .task-due-text {
+    font-size: 0.72rem !important;
+  }
+
+  .task-actions-hover {
+    margin-left: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Data Tables Touch Scroll */
+  .festora-table-container, .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 16px !important;
+  }
+
+  .festora-data-table, .table-custom {
+    min-width: 520px !important;
+  }
+
+  /* Budget Optimizer Banner */
+  .budget-summary-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+    padding: 16px !important;
+  }
+
+  .budget-summary-banner .stat-divider {
+    display: none !important;
+  }
+
+  /* Modals on Mobile */
+  .modal-dialog {
+    width: 94% !important;
+    max-width: 480px !important;
+    margin: 12px auto !important;
+    padding: 16px 14px !important;
+    max-height: 90vh !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-dialog input,
+  .modal-dialog select,
+  .modal-dialog textarea,
+  .form-control,
+  .custom-input {
+    font-size: 16px !important; /* Prevents iOS Safari auto-zoom */
+  }
+
+  /* Floating AI Copilot Button & Drawer */
+  .floating-ai-copilot-btn {
+    bottom: 16px !important;
+    right: 16px !important;
+    padding: 10px 16px !important;
+    font-size: 0.84rem !important;
+  }
+
+  .floating-ai-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    right: -100vw !important;
+  }
+
+  .floating-ai-drawer.open {
+    right: 0 !important;
+  }
+
+  /* Keepsake Diary 1-Page on Mobile */
+  .diary-open-book {
+    grid-template-columns: 1fr !important;
+    padding: 12px 10px !important;
+  }
+
+  .book-page-left {
+    display: none !important;
+  }
+
+  .book-page-right {
+    min-height: 480px !important;
+    padding: 18px 14px !important;
+  }
+
+  .book-turn-btn {
+    width: 38px !important;
+    height: 38px !important;
+  }
+}
+
+/* Extra Small Phone Screens (<= 480px) */
+@media (max-width: 480px) {
+  .tab-content-container {
+    padding: 10px 8px 60px 8px !important;
+  }
+
+  .overview-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ehb-right {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cal-day-tile {
+    min-height: 48px !important;
+    padding: 2px 2px !important;
+  }
+
+  .tile-day-num {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.7rem !important;
+  }
+}

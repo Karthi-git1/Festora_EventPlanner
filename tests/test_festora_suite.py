@@ -28,6 +28,14 @@ class FestoraEvaluationTestSuite(unittest.TestCase):
         app.config["TESTING"] = True
         cls.client = app.test_client()
 
+    @classmethod
+    def tearDownClass(cls):
+        # Ensure data/events.json is clean after test runs
+        from app import event_manager
+        event_manager.events = []
+        event_manager.settings["activeEventId"] = None
+        event_manager._save_file_events()
+
     def setUp(self):
         # Create a clean isolated test event for each test
         self.test_event_data = {
@@ -314,6 +322,55 @@ class FestoraEvaluationTestSuite(unittest.TestCase):
 
         # Clean up created event
         self.client.delete(f"/api/events/{created_ev['id']}")
+
+    def test_multi_tenant_user_isolation(self):
+        """Privacy & Security: Separate users (Person A & Person B) only see their own celebrations"""
+        headers_alice = {"X-User-Id": "usr-alice-101"}
+        headers_bob = {"X-User-Id": "usr-bob-202"}
+
+        # Alice creates an event
+        res_a = self.client.post("/api/events", json={
+            "name": "Alice Birthday Bash",
+            "type": "Birthday",
+            "date": "2026-11-20",
+            "budget": 50000,
+            "guests": 30
+        }, headers=headers_alice)
+        self.assertEqual(res_a.status_code, 200)
+        alice_event_id = res_a.get_json()["event"]["id"]
+
+        # Bob creates an event
+        res_b = self.client.post("/api/events", json={
+            "name": "Bob Anniversary Dinner",
+            "type": "Anniversary",
+            "date": "2026-12-05",
+            "budget": 80000,
+            "guests": 50
+        }, headers=headers_bob)
+        self.assertEqual(res_b.status_code, 200)
+        bob_event_id = res_b.get_json()["event"]["id"]
+
+        # Alice fetches her events
+        alice_get = self.client.get("/api/events", headers=headers_alice)
+        self.assertEqual(alice_get.status_code, 200)
+        alice_events = alice_get.get_json()["events"]
+        alice_ids = [e["id"] for e in alice_events]
+
+        # Bob fetches his events
+        bob_get = self.client.get("/api/events", headers=headers_bob)
+        self.assertEqual(bob_get.status_code, 200)
+        bob_events = bob_get.get_json()["events"]
+        bob_ids = [e["id"] for e in bob_events]
+
+        # Assert complete isolation: Alice cannot see Bob's event, Bob cannot see Alice's
+        self.assertIn(alice_event_id, alice_ids)
+        self.assertNotIn(bob_event_id, alice_ids)
+        self.assertIn(bob_event_id, bob_ids)
+        self.assertNotIn(alice_event_id, bob_ids)
+
+        # Cleanup
+        self.client.delete(f"/api/events/{alice_event_id}", headers=headers_alice)
+        self.client.delete(f"/api/events/{bob_event_id}", headers=headers_bob)
 
 
 if __name__ == "__main__":

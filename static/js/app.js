@@ -10,6 +10,55 @@
  * - Perfectly Aligned 7-Column Monthly Calendar with Hover Details
  */
 
+// =========================================================================
+// Multi-Tenant Privacy & User Isolation Interceptor
+// Ensures each user/browser has an independent workspace identity
+// =========================================================================
+(function setupFestoraUserIsolation() {
+  function getOrCreateUserId() {
+    try {
+      let uid = localStorage.getItem('festora_user_id');
+      if (!uid) {
+        const match = document.cookie.match(/(?:^|; )festora_uid=([^;]*)/);
+        if (match && match[1]) {
+          uid = match[1];
+        } else {
+          uid = 'usr-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        }
+        localStorage.setItem('festora_user_id', uid);
+      }
+      document.cookie = `festora_uid=${uid}; path=/; credentials=include; max-age=2592000; SameSite=Lax`;
+      return uid;
+    } catch (e) {
+      return 'usr-' + Date.now().toString(36);
+    }
+  }
+
+  const festoraUid = getOrCreateUserId();
+  window.festoraUserId = festoraUid;
+
+  const originalFetch = window.fetch;
+  window.fetch = function(resource, init) {
+    try {
+      const urlStr = typeof resource === 'string' ? resource : (resource && resource.url ? resource.url : '');
+      if (urlStr.includes('/api/')) {
+        init = init || {};
+        const headers = new Headers(init.headers || (typeof resource === 'object' && resource.headers ? resource.headers : {}));
+        if (!headers.has('X-User-Id')) {
+          headers.set('X-User-Id', festoraUid);
+        }
+        init.headers = headers;
+        if (!init.credentials) {
+          init.credentials = 'same-origin';
+        }
+      }
+    } catch (e) {
+      console.warn('[Festora] Fetch interceptor warning:', e);
+    }
+    return originalFetch.call(this, resource, init);
+  };
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   const App = {
     // Multi-Event State
@@ -71,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
       this.sidebar = document.getElementById('sidebar');
       this.sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
       this.mobileToggleBtn = document.getElementById('mobileToggleBtn');
+      this.sidebarMobileBackdrop = document.getElementById('sidebarMobileBackdrop');
       this.navItems = document.querySelectorAll('.nav-item');
       this.tabPanes = document.querySelectorAll('.tab-pane');
       this.currentSectionTitle = document.getElementById('currentSectionTitle');
@@ -342,21 +392,44 @@ document.addEventListener('DOMContentLoaded', () => {
       this.btnSendFloatingAi = document.getElementById('btnSendFloatingAi');
     },
 
+    closeMobileSidebar() {
+      if (this.sidebar) this.sidebar.classList.remove('mobile-open');
+      if (this.sidebarMobileBackdrop) this.sidebarMobileBackdrop.classList.remove('show');
+      document.body.classList.remove('sidebar-mobile-locked');
+    },
+
+    openMobileSidebar() {
+      if (this.sidebar) this.sidebar.classList.add('mobile-open');
+      if (this.sidebarMobileBackdrop) this.sidebarMobileBackdrop.classList.add('show');
+      document.body.classList.add('sidebar-mobile-locked');
+    },
+
+    toggleMobileSidebar() {
+      if (this.sidebar && this.sidebar.classList.contains('mobile-open')) {
+        this.closeMobileSidebar();
+      } else {
+        this.openMobileSidebar();
+      }
+    },
+
     attachEvents() {
       // Sidebar collapse & mobile toggle
       this.sidebarCollapseBtn?.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
-          this.sidebar.classList.remove('mobile-open');
+          this.closeMobileSidebar();
         } else {
           this.sidebar.classList.toggle('collapsed');
         }
       });
       this.mobileToggleBtn?.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
-          this.sidebar.classList.toggle('mobile-open');
+          this.toggleMobileSidebar();
         } else {
           this.sidebar.classList.toggle('collapsed');
         }
+      });
+      this.sidebarMobileBackdrop?.addEventListener('click', () => {
+        this.closeMobileSidebar();
       });
 
       // Tab navigation
@@ -816,6 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     async switchEvent(eventId) {
+      this.closeMobileSidebar();
       const found = this.events.find(e => e.id === eventId);
       if (!found) return;
 
@@ -846,6 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     openCreateEventModal() {
+      this.closeMobileSidebar();
       if (this.newEventType) this.newEventType.value = 'Wedding';
       this.updateCategoryPreview();
 
@@ -3203,6 +3278,7 @@ document.addEventListener('DOMContentLoaded', () => {
        TAB SWITCHER & MODAL UTILITIES
        ========================================================================== */
     switchTab(tabId) {
+      this.closeMobileSidebar();
       const subPanes = ['overview', 'tasks', 'budget', 'timeline', 'guests', 'vendors', 'notes', 'diary', 'planner'];
       if (subPanes.includes(tabId)) {
         this.switchTab('dashboard');

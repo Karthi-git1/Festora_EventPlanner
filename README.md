@@ -136,33 +136,33 @@ OK (15/15 tests passing, 0 errors, 0 failures)
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 How to Run
 
-### 1. Prerequisites
-* Python 3.11+ installed.
-* Optional: Local or cloud MongoDB instance (e.g. MongoDB Atlas).
-
-### 2. Install Dependencies
+### 1. Install Python Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment (Optional)
-Copy `.env.example` to `.env`:
+### 2. Configure Environment (Optional)
+Create a `.env` file with your MongoDB and Groq API credentials:
 ```env
-GROQ_API_KEY=your_groq_api_key_here
 MONGODB_URI=mongodb://localhost:27017/festora
+MONGODB_DB=festora
+GROQ_API_KEY=your_groq_api_key_here
 ```
-*(If omitted, Festora automatically operates in resilient local JSON mode with offline AI rule engine fallback).*
+> **Note:** If you skip this step, Festora will automatically use local JSON storage and offline AI fallback.
 
-### 4. Run Application
+### 3. Run the Application
 ```bash
 python app.py
 ```
-Open your browser at:
+
+### 4. Open in Browser
 ```
 http://localhost:5000
 ```
+
+**That's it!** Your Festora app is now running. 🎉
 
 ---
 

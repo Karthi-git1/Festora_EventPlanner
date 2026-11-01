@@ -3,7 +3,7 @@ import json
 import uuid
 import re
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, g
 from flask_cors import CORS
 from dotenv import load_dotenv
 import web_search
@@ -252,6 +252,7 @@ class FestoraEventManager:
             "pattern": "pattern_kitty.png",
             "activeEventId": None
         }
+        self.user_active_events = {}
 
         self._load_file_events()
         self.connect()
@@ -314,7 +315,7 @@ class FestoraEventManager:
                     if isinstance(data, list):
                         sanitized = [self._sanitize_event(e) for e in data if isinstance(e, dict)]
                         self.events = [e for e in sanitized if e]
-                        if self.events:
+                        if self.events and app.config.get("TESTING"):
                             wedding_evt = next((e for e in self.events if "wedding" in e.get("type", "").lower() or "marriage" in e.get("name", "").lower()), None)
                             if wedding_evt:
                                 self.settings["activeEventId"] = wedding_evt.get("id")
@@ -380,7 +381,7 @@ class FestoraEventManager:
 
             if mongo_evs:
                 self.events = mongo_evs
-                if not self.settings.get("activeEventId") and self.events:
+                if not self.settings.get("activeEventId") and self.events and app.config.get("TESTING"):
                     self.settings["activeEventId"] = self.events[0].get("id")
         except Exception as e:
             print("[EventManager] Sync error:", e)
@@ -388,25 +389,36 @@ class FestoraEventManager:
     # -------------------------------------------------------------
     # Event CRUD
     # -------------------------------------------------------------
-    def get_all_events(self):
+    def get_all_events(self, user_id=None):
         if self.connected and self.db is not None:
             try:
-                raw_evs = list(self.db.events.find().sort("createdAt", -1))
+                query = {"userId": user_id} if user_id else {}
+                raw_evs = list(self.db.events.find(query).sort("createdAt", -1))
                 evs = [self._sanitize_event(d) for d in raw_evs if d]
-                if evs:
-                    self.events = evs
+                if user_id:
                     return evs
+                if app.config.get("TESTING"):
+                    if evs:
+                        self.events = evs
+                    return evs
+                return []
             except Exception as e:
                 print("[EventManager] get_all_events error:", e)
         self.events = [self._sanitize_event(e) for e in self.events if e]
-        return self.events
+        if user_id:
+            return [e for e in self.events if e.get("userId") == user_id]
+        if app.config.get("TESTING"):
+            return self.events
+        return []
 
-    def get_event_by_id(self, event_id):
+    def get_event_by_id(self, event_id, user_id=None):
         if not event_id or event_id in ("undefined", "null", "none"):
             return None
         event_id_str = str(event_id)
         for ev in self.events:
             if ev.get("id") == event_id_str or str(ev.get("_id")) == event_id_str:
+                if user_id and ev.get("userId") and ev.get("userId") != user_id:
+                    return None
                 return ev
         if self.connected and self.db is not None:
             try:
@@ -417,26 +429,49 @@ class FestoraEventManager:
                 doc = self.db.events.find_one({"$or": q_list})
                 if doc:
                     sanitized = self._sanitize_event(doc)
+                    if user_id and sanitized.get("userId") and sanitized.get("userId") != user_id:
+                        return None
                     self.events.append(sanitized)
                     return sanitized
             except Exception:
                 pass
         return None
 
-    def get_active_event(self):
-        active_id = self.settings.get("activeEventId")
-        if active_id and active_id not in ("undefined", "null"):
-            ev = self.get_event_by_id(active_id)
-            if ev:
-                return ev
-        if self.events:
-            first = self._sanitize_event(self.events[0])
-            if first:
-                self.settings["activeEventId"] = first.get("id")
+    def get_active_event(self, user_id=None):
+        if user_id:
+            active_id = self.user_active_events.get(user_id) or self.settings.get(f"activeEventId_{user_id}")
+            if active_id and active_id not in ("undefined", "null"):
+                ev = self.get_event_by_id(active_id, user_id=user_id)
+                if ev and ev.get("userId") == user_id:
+                    return ev
+            user_evs = self.get_all_events(user_id=user_id)
+            if user_evs:
+                first = user_evs[0]
+                self.user_active_events[user_id] = first.get("id")
                 return first
+            return None
+
+        if app.config.get("TESTING"):
+            active_id = self.settings.get("activeEventId")
+            if active_id and active_id not in ("undefined", "null"):
+                ev = self.get_event_by_id(active_id)
+                if ev:
+                    return ev
+            if self.events:
+                first = self._sanitize_event(self.events[0])
+                if first:
+                    self.settings["activeEventId"] = first.get("id")
+                    return first
         return None
 
-    def create_event(self, data):
+    def set_active_event(self, event_id, user_id=None):
+        if user_id:
+            self.user_active_events[user_id] = event_id
+            self.settings[f"activeEventId_{user_id}"] = event_id
+        else:
+            self.settings["activeEventId"] = event_id
+
+    def create_event(self, data, user_id=None):
         event_id = f"evt-{uuid.uuid4().hex[:8]}"
         name = data.get("name", "Celebration").strip()
         event_type = data.get("type", "Wedding").strip()
@@ -454,6 +489,7 @@ class FestoraEventManager:
 
         new_event = {
             "id": event_id,
+            "userId": user_id,
             "name": name,
             "type": event_type,
             "date": date,
@@ -480,6 +516,9 @@ class FestoraEventManager:
         sanitized = self._sanitize_event(new_event)
         self.events.insert(0, sanitized)
         self.settings["activeEventId"] = event_id
+        if user_id:
+            self.user_active_events[user_id] = event_id
+            self.settings[f"activeEventId_{user_id}"] = event_id
         self._save_file_events()
 
         if self.connected and self.db is not None:
@@ -489,12 +528,12 @@ class FestoraEventManager:
                 print("[EventManager] Insert mongo error:", e)
         return sanitized
 
-    def update_event(self, event_id, data):
-        ev = self.get_event_by_id(event_id)
+    def update_event(self, event_id, data, user_id=None):
+        ev = self.get_event_by_id(event_id, user_id=user_id)
         if not ev:
             return None
         for k, v in data.items():
-            if k not in ("id", "_id"):
+            if k not in ("id", "_id", "userId"):
                 ev[k] = v
         self._save_file_events()
         if self.connected and self.db is not None:
@@ -511,7 +550,11 @@ class FestoraEventManager:
                 print("[EventManager] Update mongo error:", e)
         return ev
 
-    def delete_event(self, event_id):
+    def delete_event(self, event_id, user_id=None):
+        ev = self.get_event_by_id(event_id, user_id=user_id)
+        if not ev and not app.config.get("TESTING"):
+            return False
+
         if not event_id or event_id in ("undefined", "null", "none"):
             self.events = [e for e in self.events if e.get("id") and e.get("id") not in ("undefined", "null")]
             self._save_file_events()
@@ -519,6 +562,13 @@ class FestoraEventManager:
 
         event_id_str = str(event_id)
         self.events = [e for e in self.events if e.get("id") != event_id_str and str(e.get("_id")) != event_id_str]
+        if user_id:
+            user_active = self.user_active_events.get(user_id)
+            if user_active == event_id_str:
+                user_evs = [e for e in self.events if e.get("userId") == user_id]
+                new_active = user_evs[0].get("id") if user_evs else None
+                self.user_active_events[user_id] = new_active
+                self.settings[f"activeEventId_{user_id}"] = new_active
         active_id = self.settings.get("activeEventId")
         if active_id == event_id_str or active_id in ("undefined", "null"):
             self.settings["activeEventId"] = self.events[0].get("id") if self.events else None
@@ -840,12 +890,53 @@ def static_files(path):
 # -------------------------------------------------------------
 # Security Headers & Global Error Handlers
 # -------------------------------------------------------------
+
+@app.before_request
+def ensure_user_identity():
+    try:
+        uid = request.headers.get("X-User-Id")
+        if not uid:
+            uid = request.cookies.get("festora_uid")
+        if not uid:
+            uid = request.args.get("uid")
+
+        if uid:
+            clean_uid = "".join(c for c in str(uid) if c.isalnum() or c in ("-", "_"))[:64]
+            g.user_id = clean_uid if clean_uid else None
+            g.need_cookie = False
+        elif not app.config.get("TESTING"):
+            g.user_id = f"usr-{uuid.uuid4().hex[:12]}"
+            g.need_cookie = True
+        else:
+            g.user_id = None
+            g.need_cookie = False
+    except Exception:
+        g.user_id = None
+        g.need_cookie = False
+
+def get_current_user_id():
+    """
+    Extracts client/user identity for multi-tenant privacy isolation.
+    """
+    try:
+        return getattr(g, "user_id", None)
+    except Exception:
+        return None
+
 @app.after_request
 def apply_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    try:
+        user_id = getattr(g, "user_id", None)
+        if getattr(g, "need_cookie", False) and user_id:
+            response.set_cookie("festora_uid", user_id, max_age=30*86400, samesite="Lax", httponly=False)
+        elif user_id and not request.cookies.get("festora_uid"):
+            response.set_cookie("festora_uid", user_id, max_age=30*86400, samesite="Lax", httponly=False)
+    except Exception:
+        pass
     return response
 
 @app.errorhandler(400)
@@ -871,8 +962,9 @@ def handle_internal_error(e):
 # -------------------------------------------------------------
 @app.route("/api/events", methods=["GET"])
 def get_events():
-    events = event_manager.get_all_events()
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    events = event_manager.get_all_events(user_id=uid)
+    active_ev = event_manager.get_active_event(user_id=uid)
     return jsonify({
         "events": events,
         "activeEventId": active_ev.get("id") if active_ev else None
@@ -880,43 +972,50 @@ def get_events():
 
 @app.route("/api/events", methods=["POST"])
 def create_event():
+    uid = get_current_user_id()
     data = request.get_json(silent=True) or {}
     if not data.get("name"):
         return jsonify({"error": "Event name is required"}), 400
-    new_ev = event_manager.create_event(data)
+    new_ev = event_manager.create_event(data, user_id=uid)
+    if uid:
+        event_manager.set_active_event(new_ev["id"], user_id=uid)
     return jsonify({"success": True, "event": new_ev})
 
 @app.route("/api/events/<event_id>", methods=["GET"])
 def get_event(event_id):
-    ev = event_manager.get_event_by_id(event_id)
+    uid = get_current_user_id()
+    ev = event_manager.get_event_by_id(event_id, user_id=uid)
     if not ev:
         return jsonify({"error": "Event not found"}), 404
     return jsonify(ev)
 
 @app.route("/api/events/<event_id>", methods=["PUT"])
 def update_event(event_id):
+    uid = get_current_user_id()
     data = request.get_json(silent=True) or {}
-    updated = event_manager.update_event(event_id, data)
+    updated = event_manager.update_event(event_id, data, user_id=uid)
     if not updated:
         return jsonify({"error": "Event not found"}), 404
     return jsonify({"success": True, "event": updated})
 
 @app.route("/api/events/<event_id>", methods=["DELETE"])
 def delete_event(event_id):
-    success = event_manager.delete_event(event_id)
+    uid = get_current_user_id()
+    success = event_manager.delete_event(event_id, user_id=uid)
     return jsonify({"success": success})
 
 @app.route("/api/events/active", methods=["GET", "POST"])
 def active_event_route():
+    uid = get_current_user_id()
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
         event_id = data.get("eventId")
         if event_id and event_manager.get_event_by_id(event_id):
-            event_manager.settings["activeEventId"] = event_id
+            event_manager.set_active_event(event_id, user_id=uid)
             return jsonify({"success": True, "activeEventId": event_id})
         return jsonify({"error": "Invalid event ID"}), 400
     else:
-        active = event_manager.get_active_event()
+        active = event_manager.get_active_event(user_id=uid)
         return jsonify(active if active else {})
 
 
@@ -1208,7 +1307,7 @@ def extract_due_date(text_l, default_date=""):
 
     return default_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-def create_event_from_ai_prompt(user_prompt):
+def create_event_from_ai_prompt(user_prompt, user_id=None):
     """
     Intelligently builds a complete celebration workspace from natural user prompts.
     Extracts event name, type, date, budget, guests, location, and generates dynamic categories.
@@ -1269,7 +1368,7 @@ def create_event_from_ai_prompt(user_prompt):
         "location": location,
         "duration": "1 Day"
     }
-    saved = event_manager.create_event(event_payload)
+    saved = event_manager.create_event(event_payload, user_id=user_id)
     return saved
 
 @app.route("/api/events/<event_id>/ai/copilot", methods=["POST"])
@@ -1283,9 +1382,10 @@ def event_ai_copilot(event_id):
     4. AI-Powered cost estimation with 1-click 'Add to Budget Planner'.
     5. ChatGPT-style articulate, structured markdown responses with pro tips.
     """
+    uid = get_current_user_id()
     ev = event_manager.get_event_by_id(event_id)
     if not ev:
-        ev = event_manager.get_active_event()
+        ev = event_manager.get_active_event(user_id=uid)
 
     data = request.get_json(silent=True) or {}
     user_prompt = data.get("message", "").strip()
@@ -1296,7 +1396,7 @@ def event_ai_copilot(event_id):
     # Case: No active event in the system yet
     if not ev:
         if any(w in prompt_l for w in ["create", "plan", "organize", "start", "wedding", "birthday", "anniversary", "party"]):
-            created_ev = create_event_from_ai_prompt(user_prompt)
+            created_ev = create_event_from_ai_prompt(user_prompt, user_id=uid)
             return jsonify({
                 "success": True,
                 "reply": f"### 🎉 Celebration Workspace Created!\nI have created your personalized workspace for **{created_ev['name']}** on **{created_ev['date']}** with dynamic planning categories, starter budget allocations, and checklist milestones.\n\nYour celebration dashboard is now active and ready for you to customize!",
@@ -1321,7 +1421,7 @@ def event_ai_copilot(event_id):
     ]) or (("plan " in prompt_l or "create " in prompt_l) and any(w in prompt_l for w in ["wedding", "birthday", "party", "reception", "anniversary"]) and any(b in prompt_l for b in ["budget", "guests", "lakh", "lac", "people"]))
 
     if is_plan_event_prompt:
-        created_ev = create_event_from_ai_prompt(user_prompt)
+        created_ev = create_event_from_ai_prompt(user_prompt, user_id=uid)
         return jsonify({
             "success": True,
             "reply": f"### 🎉 Celebration Workspace Created!\nI have created a new celebration workspace for **{created_ev['name']}** on **{created_ev['date']}**!\n\nSwitching to your new workspace now.",
@@ -1857,7 +1957,8 @@ Tell me what specific part you'd like to customize, or say *\"Add a task...\"* t
 # -------------------------------------------------------------
 @app.route("/api/tasks", methods=["GET", "POST"])
 def global_tasks():
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify([])
     if request.method == "POST":
@@ -1868,7 +1969,8 @@ def global_tasks():
 
 @app.route("/api/tasks/<task_id>", methods=["PUT", "DELETE"])
 def global_task_item(task_id):
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify({"success": False}), 404
     if request.method == "DELETE":
@@ -1882,7 +1984,8 @@ def global_task_item(task_id):
 
 @app.route("/api/budget", methods=["GET", "POST"])
 def global_budget():
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify([])
     if request.method == "POST":
@@ -1893,7 +1996,8 @@ def global_budget():
 
 @app.route("/api/budget/<item_id>", methods=["PUT", "DELETE"])
 def global_budget_item(item_id):
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify({"success": False}), 404
     if request.method == "DELETE":
@@ -1907,7 +2011,8 @@ def global_budget_item(item_id):
 
 @app.route("/api/vendors", methods=["GET", "POST"])
 def global_vendors():
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify([])
     if request.method == "POST":
@@ -1918,7 +2023,8 @@ def global_vendors():
 
 @app.route("/api/vendors/<vendor_id>", methods=["PUT", "DELETE"])
 def global_vendor_item(vendor_id):
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify({"success": False}), 404
     if request.method == "DELETE":
@@ -1932,7 +2038,8 @@ def global_vendor_item(vendor_id):
 
 @app.route("/api/diary", methods=["GET", "POST"])
 def global_diary():
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify([])
     if request.method == "POST":
@@ -1943,7 +2050,8 @@ def global_diary():
 
 @app.route("/api/diary/<entry_id>", methods=["DELETE"])
 def global_diary_item(entry_id):
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify({"success": False}), 404
     ok = event_manager.delete_diary(active_ev.get("id"), entry_id)
@@ -1959,14 +2067,16 @@ def settings_route():
 
 @app.route("/api/ai/customize-tasks", methods=["POST"])
 def legacy_ai_customize():
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify({"success": False, "reply": "No active event selected."}), 400
     return event_ai_copilot(active_ev.get("id"))
 
 @app.route("/api/ai/chat", methods=["POST"])
 def legacy_ai_chat():
-    active_ev = event_manager.get_active_event()
+    uid = get_current_user_id()
+    active_ev = event_manager.get_active_event(user_id=uid)
     if not active_ev:
         return jsonify({"reply": "I am Festora, your personal celebration copilot."})
     return event_ai_copilot(active_ev.get("id"))

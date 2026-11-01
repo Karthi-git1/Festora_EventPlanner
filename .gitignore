@@ -9,6 +9,15 @@ __pycache__/
 *.so
 .pytest_cache/
 
+# Development files (not for production)
+.kiro/
+*_SUMMARY.md
+OPTIMIZATION_STATUS.md
+MODULAR_STRUCTURE.md
+ROADMAP_TO_100_PERCENT.md
+QUICK_START_IMPROVEMENTS.md
+README_IMPROVEMENTS.md
+
 # Scratch & development logs
 scratch/
 *.log
@@ -16,4 +25,10 @@ scratch/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
 
