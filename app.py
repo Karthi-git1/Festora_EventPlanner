@@ -1415,6 +1415,50 @@ def create_event_from_ai_prompt(user_prompt, user_id=None):
         "duration": "1 Day"
     }
     saved = event_manager.create_event(event_payload, user_id=user_id)
+    
+    # Auto-populate guests if mentioned in prompt
+    guest_match = re.search(r'(\d+)\s*(?:guest|people|attendee)', prompt_l)
+    if guest_match and int(guest_match.group(1)) > 0:
+        guest_count = int(guest_match.group(1))
+        # Add a default guest entry
+        initial_guest = {
+            "name": "Initial Guest List",
+            "attendeesCount": guest_count,
+            "rsvp": "Pending",
+            "category": "Family"
+        }
+        event_manager.save_guest(saved["id"], initial_guest)
+    
+    # Auto-populate vendors if mentioned in prompt
+    vendor_keywords = {
+        "cake": ("Cake Baker", "Birthday Cake", 6000),
+        "decoration": ("Decorator", "Decoration", 50000),
+        "decor": ("Decorator", "Decoration", 50000),
+        "photographer": ("Photographer", "Photography", 45000),
+        "photo": ("Photographer", "Photography", 45000),
+        "caterer": ("Caterer", "Catering", 80000),
+        "cater": ("Caterer", "Catering", 80000),
+        "food": ("Caterer", "Catering", 80000),
+        "makeup": ("Makeup Artist", "Makeup", 15000),
+        "florist": ("Florist", "Floral", 30000),
+        "flower": ("Florist", "Floral", 30000)
+    }
+    
+    vendors_added = []
+    for keyword, (vendor_name, vendor_cat, default_price) in vendor_keywords.items():
+        if keyword in prompt_l and vendor_name not in vendors_added:
+            vendor_data = {
+                "name": vendor_name,
+                "vendorCategory": vendor_cat,
+                "quotedPrice": default_price,
+                "advancePaid": 0,
+                "status": "Pending"
+            }
+            event_manager.save_vendor(saved["id"], vendor_data)
+            vendors_added.append(vendor_name)
+    
+    # Refresh the event to include the newly added guests/vendors
+    saved = event_manager.get_event_by_id(saved["id"])
     return saved
 
 @app.route("/api/events/<event_id>/ai/copilot", methods=["POST"])
@@ -1624,7 +1668,7 @@ COMMUNICATION STYLE (Speak like ChatGPT):
 
 Return ONLY valid JSON with:
 1. "reply": Expansive, structured ChatGPT-style markdown reply.
-2. "action_type": ("add_task"|"add_budget_item"|"update_expense"|"add_total_budget"|"task_and_budget_added"|"add_guest"|"add_reminder"|"create_event"|"recommendations"|"none")
+2. "action_type": ("add_task"|"add_budget_item"|"update_expense"|"add_total_budget"|"task_and_budget_added"|"add_guest"|"add_vendor"|"add_reminder"|"create_event"|"recommendations"|"none")
 3. "action_payload": Object containing parameters:
    - For add_task: {{"title": str, "category": str, "dueDate": str, "priority": "high"|"medium"|"low", "symbol": str, "notes": str}}
    - For add_total_budget: {{"addedAmount": number, "isReduction": bool}}
@@ -1632,6 +1676,7 @@ Return ONLY valid JSON with:
    - For add_budget_item: {{"category": str, "allocated": number, "spent": number, "notes": str}}
    - For update_expense: {{"category": str, "expenseDelta": number, "notes": str}}
    - For add_guest: {{"name": str, "attendeesCount": number, "category": str, "rsvp": "Confirmed"|"Pending"}}
+   - For add_vendor: {{"name": str, "vendorCategory": str, "quotedPrice": number, "advancePaid": number, "status": "Confirmed"|"In Talks"|"Pending"}}
    - For add_reminder: {{"title": str, "datetime": str, "priority": "high"|"medium"}}
    - For recommendations: array of {{"title": str, "description": str, "type": "task"|"budget", "payload": object}}
 """
@@ -1727,6 +1772,10 @@ Return ONLY valid JSON with:
                 elif act_type == "add_guest" and payload.get("name"):
                     saved = event_manager.save_guest(event_id, payload)
                     executed_action = {"type": "guest_added", "guest": saved}
+
+                elif act_type == "add_vendor" and payload.get("name"):
+                    saved = event_manager.save_vendor(event_id, payload)
+                    executed_action = {"type": "vendor_added", "vendor": saved}
 
                 elif act_type == "add_reminder" and payload.get("title"):
                     saved = event_manager.save_reminder(event_id, payload)
@@ -1908,6 +1957,45 @@ Return ONLY valid JSON with:
             saved = event_manager.save_guest(event_id, g_data)
             executed_action = {"type": "guest_added", "guest": saved}
             reply = f"I've added guest {saved['name']} ({count} headcount) to your guest directory!"
+
+        elif "add" in prompt_l and "vendor" in prompt_l or ("photographer" in prompt_l or "caterer" in prompt_l or "decorator" in prompt_l or "florist" in prompt_l):
+            numbers = re.findall(r'(\d+[\d,]*)', prompt_l.replace(",", ""))
+            quoted = float(numbers[0]) if numbers else 50000
+            vendor_name = "Vendor"
+            vendor_cat = "General"
+            
+            # Extract vendor name
+            for w in user_prompt.split():
+                if w.isalpha() and w.istitle() and w not in ["Add", "Vendor", "The", "My", "A"]:
+                    vendor_name = w
+                    break
+            
+            # Determine category
+            if "photographer" in prompt_l or "photo" in prompt_l:
+                vendor_cat = "Photography"
+                if vendor_name == "Vendor":
+                    vendor_name = "Photographer"
+            elif "caterer" in prompt_l or "cater" in prompt_l or "food" in prompt_l:
+                vendor_cat = "Catering"
+                if vendor_name == "Vendor":
+                    vendor_name = "Caterer"
+            elif "decorator" in prompt_l or "decor" in prompt_l:
+                vendor_cat = "Decoration"
+                if vendor_name == "Vendor":
+                    vendor_name = "Decorator"
+            elif "florist" in prompt_l or "flower" in prompt_l:
+                vendor_cat = "Floral"
+                if vendor_name == "Vendor":
+                    vendor_name = "Florist"
+            elif "makeup" in prompt_l or "mua" in prompt_l:
+                vendor_cat = "Makeup"
+                if vendor_name == "Vendor":
+                    vendor_name = "Makeup Artist"
+            
+            v_data = {"name": vendor_name, "vendorCategory": vendor_cat, "quotedPrice": quoted, "advancePaid": 0, "status": "In Talks"}
+            saved = event_manager.save_vendor(event_id, v_data)
+            executed_action = {"type": "vendor_added", "vendor": saved}
+            reply = f"I've added {saved['name']} ({vendor_cat}) to your vendors with quoted price {currency}{quoted:,.0f}!"
 
         elif "budget" in prompt_l and ("add" in prompt_l or "allocate" in prompt_l or "floral" in prompt_l):
             numbers = re.findall(r'(\d+[\d,]*)', prompt_l.replace(",", ""))

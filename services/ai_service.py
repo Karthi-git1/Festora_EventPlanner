@@ -502,7 +502,7 @@ COMMUNICATION STYLE (Speak like ChatGPT):
 
 Return ONLY valid JSON with:
 1. "reply": Expansive, structured ChatGPT-style markdown reply.
-2. "action_type": ("add_task"|"add_budget_item"|"update_expense"|"add_total_budget"|"task_and_budget_added"|"add_guest"|"add_reminder"|"create_event"|"recommendations"|"none")
+2. "action_type": ("add_task"|"add_budget_item"|"update_expense"|"add_total_budget"|"task_and_budget_added"|"add_guest"|"add_vendor"|"add_reminder"|"create_event"|"recommendations"|"none")
 3. "action_payload": Object containing parameters:
    - For add_task: {{"title": str, "category": str, "dueDate": str, "priority": "high"|"medium"|"low", "symbol": str, "notes": str}}
    - For add_total_budget: {{"addedAmount": number, "isReduction": bool}}
@@ -510,6 +510,7 @@ Return ONLY valid JSON with:
    - For add_budget_item: {{"category": str, "allocated": number, "spent": number, "notes": str}}
    - For update_expense: {{"category": str, "expenseDelta": number, "notes": str}}
    - For add_guest: {{"name": str, "attendeesCount": number, "category": str, "rsvp": "Confirmed"|"Pending"}}
+   - For add_vendor: {{"name": str, "vendorCategory": str, "quotedPrice": number, "advancePaid": number, "status": "Confirmed"|"In Talks"|"Pending"}}
    - For add_reminder: {{"title": str, "datetime": str, "priority": "high"|"medium"}}
    - For recommendations: array of {{"title": str, "description": str, "type": "task"|"budget", "payload": object}}
 """
