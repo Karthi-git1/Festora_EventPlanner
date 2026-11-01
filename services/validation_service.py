@@ -44,8 +44,8 @@ class TaskSchema(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     category: str = Field(..., max_length=100)
     dueDate: date
-    priority: str = Field(regex="^(low|medium|high)$")
-    status: str = Field(default="todo", regex="^(todo|in-progress|completed)$")
+    priority: str = Field(pattern="^(low|medium|high)$")
+    status: str = Field(default="todo", pattern="^(todo|in-progress|completed)$")
     notes: Optional[str] = Field(None, max_length=1000)
     
     @validator('title', 'notes', pre=True)

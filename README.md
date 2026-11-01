@@ -113,9 +113,9 @@ pytest tests/ -v
 ### Test Suite Output:
 ```text
 ============================= test session starts =============================
-137 passed in 7.20s
+142 passed in 36.50s
 
-OK (137/137 tests passing, 0 errors, 0 failures, 100% pass rate)
+OK (142/142 tests passing, 0 errors, 0 failures, 100% pass rate)
 ```
 
 ### Test Coverage Breakdown:

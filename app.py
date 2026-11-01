@@ -108,6 +108,20 @@ CATEGORY_PRESETS: Dict[str, List[str]] = {
     ]
 }
 
+# Default values constants
+DEFAULT_CURRENCY: str = "₹"
+DEFAULT_BUDGET: float = 200000.0
+DEFAULT_GUESTS: int = 150
+DEFAULT_EVENT_NAME: str = "Celebration"
+DEFAULT_EVENT_TYPE: str = "Wedding"
+DEFAULT_TASK_STATUS: str = "todo"
+DEFAULT_TASK_PRIORITY: str = "medium"
+DEFAULT_RSVP_STATUS: str = "Pending"
+DEFAULT_VENDOR_STATUS: str = "In Talks"
+DEFAULT_REMINDER_PRIORITY: str = "medium"
+DEFAULT_PATTERN: str = "pattern_kitty.png"
+DEFAULT_THEME: str = "kitty-cozy"
+
 
 def generate_starter_event_data(
     name: str,
@@ -305,8 +319,8 @@ class FestoraEventManager:
         self.connected = False
         self.events = []
         self.settings = {
-            "theme": "kitty-cozy",
-            "pattern": "pattern_kitty.png",
+            "theme": DEFAULT_THEME,
+            "pattern": DEFAULT_PATTERN,
             "activeEventId": None
         }
         self.user_active_events = {}
@@ -331,26 +345,26 @@ class FestoraEventManager:
             del ev["_id"]
 
         if not ev.get("name"):
-            ev["name"] = "Celebration"
+            ev["name"] = DEFAULT_EVENT_NAME
         if not ev.get("type"):
-            ev["type"] = "Wedding"
+            ev["type"] = DEFAULT_EVENT_TYPE
         if "budget" not in ev or ev["budget"] is None:
-            ev["budget"] = 200000.0
+            ev["budget"] = DEFAULT_BUDGET
         else:
             try:
                 ev["budget"] = float(ev["budget"])
             except Exception:
-                ev["budget"] = 200000.0
+                ev["budget"] = DEFAULT_BUDGET
 
         if not ev.get("currency"):
-            ev["currency"] = "₹"
+            ev["currency"] = DEFAULT_CURRENCY
         if "guests" not in ev or ev["guests"] is None:
-            ev["guests"] = 150
+            ev["guests"] = DEFAULT_GUESTS
         else:
             try:
                 ev["guests"] = int(ev["guests"])
             except Exception:
-                ev["guests"] = 150
+                ev["guests"] = DEFAULT_GUESTS
 
         # Ensure all standard list collections exist
         for arr_key in ["categories", "budgetItems", "tasks", "timeline", "reminders", "guestsList", "vendors", "notesList", "diaryEntries"]:
@@ -643,262 +657,199 @@ class FestoraEventManager:
         return True
 
     # -------------------------------------------------------------
+    # Helper Methods (Reduce Code Duplication)
+    # -------------------------------------------------------------
+    def _save_event_item(
+        self,
+        event_id: str,
+        item_data: Dict[str, Any],
+        collection_key: str,
+        id_prefix: str,
+        insert_at_start: bool = True
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Generic helper to save an item to an event's collection.
+        Reduces code duplication across save_task, save_guest, etc.
+        
+        Args:
+            event_id: Event ID
+            item_data: Item data dict
+            collection_key: Collection name in event (e.g., 'tasks', 'guestsList')
+            id_prefix: ID prefix for new items (e.g., 't', 'g')
+            insert_at_start: Whether to insert at start or end
+            
+        Returns:
+            Saved item data or None if event not found
+        """
+        ev = self.get_event_by_id(event_id)
+        if not ev:
+            return None
+        
+        # Ensure item has ID
+        if not item_data.get("id"):
+            item_data["id"] = f"{id_prefix}-{uuid.uuid4().hex[:6]}"
+        
+        # Get collection
+        collection = ev.get(collection_key, [])
+        
+        # Update or insert
+        found = False
+        for i, existing_item in enumerate(collection):
+            if existing_item.get("id") == item_data.get("id"):
+                collection[i] = item_data
+                found = True
+                break
+        
+        if not found:
+            if insert_at_start:
+                collection.insert(0, item_data)
+            else:
+                collection.append(item_data)
+        
+        ev[collection_key] = collection
+        self.update_event(event_id, ev)
+        return item_data
+    
+    def _delete_event_item(
+        self,
+        event_id: str,
+        item_id: str,
+        collection_key: str
+    ) -> bool:
+        """
+        Generic helper to delete an item from an event's collection.
+        Reduces code duplication across delete methods.
+        
+        Args:
+            event_id: Event ID
+            item_id: Item ID to delete
+            collection_key: Collection name in event
+            
+        Returns:
+            True if deleted successfully
+        """
+        ev = self.get_event_by_id(event_id)
+        if not ev:
+            return False
+        
+        ev[collection_key] = [
+            item for item in ev.get(collection_key, [])
+            if item.get("id") != item_id
+        ]
+        self.update_event(event_id, ev)
+        return True
+    
+    # -------------------------------------------------------------
     # Sub-item Operations inside Event
     # -------------------------------------------------------------
     def save_task(self, event_id, task_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not task_data.get("id"):
-            task_data["id"] = f"t-{uuid.uuid4().hex[:6]}"
+        """Save or update a task."""
+        # Set defaults
         if "status" not in task_data:
-            task_data["status"] = "todo"
+            task_data["status"] = DEFAULT_TASK_STATUS
         if "priority" not in task_data:
-            task_data["priority"] = "medium"
-
-        tasks = ev.get("tasks", [])
-        found = False
-        for i, t in enumerate(tasks):
-            if t.get("id") == task_data.get("id"):
-                tasks[i] = task_data
-                found = True
-                break
-        if not found:
-            tasks.insert(0, task_data)
-        ev["tasks"] = tasks
-        self.update_event(event_id, ev)
-        return task_data
+            task_data["priority"] = DEFAULT_TASK_PRIORITY
+        
+        return self._save_event_item(event_id, task_data, "tasks", "t", insert_at_start=True)
 
     def delete_task(self, event_id, task_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["tasks"] = [t for t in ev.get("tasks", []) if t.get("id") != task_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a task."""
+        return self._delete_event_item(event_id, task_id, "tasks")
 
     def save_budget_item(self, event_id, item_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not item_data.get("id"):
-            item_data["id"] = f"b-{uuid.uuid4().hex[:6]}"
+        """Save or update a budget item."""
         item_data["allocated"] = float(item_data.get("allocated", 0))
         item_data["spent"] = float(item_data.get("spent", 0))
-
-        items = ev.get("budgetItems", [])
-        found = False
-        for i, b in enumerate(items):
-            if b.get("id") == item_data.get("id"):
-                items[i] = item_data
-                found = True
-                break
-        if not found:
-            items.append(item_data)
-        ev["budgetItems"] = items
-
-        if item_data.get("category") and item_data["category"] not in ev.get("categories", []):
-            ev.setdefault("categories", []).append(item_data["category"])
-
-        self.update_event(event_id, ev)
-        return item_data
+        
+        # Add category if new
+        ev = self.get_event_by_id(event_id)
+        if ev and item_data.get("category"):
+            if item_data["category"] not in ev.get("categories", []):
+                ev.setdefault("categories", []).append(item_data["category"])
+                self.update_event(event_id, {"categories": ev["categories"]})
+        
+        return self._save_event_item(event_id, item_data, "budgetItems", "b", insert_at_start=False)
 
     def delete_budget_item(self, event_id, item_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["budgetItems"] = [b for b in ev.get("budgetItems", []) if b.get("id") != item_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a budget item."""
+        return self._delete_event_item(event_id, item_id, "budgetItems")
 
     def save_timeline_item(self, event_id, item_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not item_data.get("id"):
-            item_data["id"] = f"tl-{uuid.uuid4().hex[:6]}"
-        timeline = ev.get("timeline", [])
-        found = False
-        for i, tl in enumerate(timeline):
-            if tl.get("id") == item_data.get("id"):
-                timeline[i] = item_data
-                found = True
-                break
-        if not found:
-            timeline.append(item_data)
-        ev["timeline"] = timeline
-        self.update_event(event_id, ev)
-        return item_data
+        """Save or update a timeline item."""
+        return self._save_event_item(event_id, item_data, "timeline", "tl", insert_at_start=False)
 
     def delete_timeline_item(self, event_id, item_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["timeline"] = [t for t in ev.get("timeline", []) if t.get("id") != item_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a timeline item."""
+        return self._delete_event_item(event_id, item_id, "timeline")
 
     # Reminders
     def save_reminder(self, event_id, reminder_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not reminder_data.get("id"):
-            reminder_data["id"] = f"rem-{uuid.uuid4().hex[:6]}"
+        """Save or update a reminder."""
         if "completed" not in reminder_data:
             reminder_data["completed"] = False
         if not reminder_data.get("priority"):
-            reminder_data["priority"] = "medium"
-
-        reminders = ev.get("reminders", [])
-        found = False
-        for i, r in enumerate(reminders):
-            if r.get("id") == reminder_data.get("id"):
-                reminders[i] = reminder_data
-                found = True
-                break
-        if not found:
-            reminders.insert(0, reminder_data)
-        ev["reminders"] = reminders
-        self.update_event(event_id, ev)
-        return reminder_data
+            reminder_data["priority"] = DEFAULT_REMINDER_PRIORITY
+        
+        return self._save_event_item(event_id, reminder_data, "reminders", "rem", insert_at_start=True)
 
     def delete_reminder(self, event_id, rem_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["reminders"] = [r for r in ev.get("reminders", []) if r.get("id") != rem_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a reminder."""
+        return self._delete_event_item(event_id, rem_id, "reminders")
 
     # Guests
     def save_guest(self, event_id, guest_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not guest_data.get("id"):
-            guest_data["id"] = f"g-{uuid.uuid4().hex[:6]}"
+        """Save or update a guest."""
         guest_data["attendeesCount"] = int(guest_data.get("attendeesCount", 1))
         if not guest_data.get("rsvp"):
-            guest_data["rsvp"] = "Pending"
-
-        guests = ev.get("guestsList", [])
-        found = False
-        for i, g in enumerate(guests):
-            if g.get("id") == guest_data.get("id"):
-                guests[i] = guest_data
-                found = True
-                break
-        if not found:
-            guests.append(guest_data)
-        ev["guestsList"] = guests
-        self.update_event(event_id, ev)
-        return guest_data
+            guest_data["rsvp"] = DEFAULT_RSVP_STATUS
+        
+        return self._save_event_item(event_id, guest_data, "guestsList", "g", insert_at_start=False)
 
     def delete_guest(self, event_id, guest_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["guestsList"] = [g for g in ev.get("guestsList", []) if g.get("id") != guest_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a guest."""
+        return self._delete_event_item(event_id, guest_id, "guestsList")
 
     # Vendors
     def save_vendor(self, event_id, vendor_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not vendor_data.get("id"):
-            vendor_data["id"] = f"v-{uuid.uuid4().hex[:6]}"
+        """Save or update a vendor."""
         vendor_data["quotedPrice"] = float(vendor_data.get("quotedPrice", 0))
         vendor_data["advancePaid"] = float(vendor_data.get("advancePaid", 0))
         if not vendor_data.get("status"):
-            vendor_data["status"] = "In Talks"
-
-        vendors = ev.get("vendors", [])
-        found = False
-        for i, v in enumerate(vendors):
-            if v.get("id") == vendor_data.get("id"):
-                vendors[i] = vendor_data
-                found = True
-                break
-        if not found:
-            vendors.append(vendor_data)
-        ev["vendors"] = vendors
-        self.update_event(event_id, ev)
-        return vendor_data
+            vendor_data["status"] = DEFAULT_VENDOR_STATUS
+        
+        return self._save_event_item(event_id, vendor_data, "vendors", "v", insert_at_start=False)
 
     def delete_vendor(self, event_id, vendor_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["vendors"] = [v for v in ev.get("vendors", []) if v.get("id") != vendor_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a vendor."""
+        return self._delete_event_item(event_id, vendor_id, "vendors")
 
     # Notes
     def save_note(self, event_id, note_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not note_data.get("id"):
-            note_data["id"] = f"n-{uuid.uuid4().hex[:6]}"
+        """Save or update a note."""
         if not note_data.get("createdAt"):
             note_data["createdAt"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-        notes = ev.get("notesList", [])
-        found = False
-        for i, n in enumerate(notes):
-            if n.get("id") == note_data.get("id"):
-                notes[i] = note_data
-                found = True
-                break
-        if not found:
-            notes.insert(0, note_data)
-        ev["notesList"] = notes
-        self.update_event(event_id, ev)
-        return note_data
+        
+        return self._save_event_item(event_id, note_data, "notesList", "n", insert_at_start=True)
 
     def delete_note(self, event_id, note_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["notesList"] = [n for n in ev.get("notesList", []) if n.get("id") != note_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a note."""
+        return self._delete_event_item(event_id, note_id, "notesList")
 
     # Keepsake Diary
     def save_diary(self, event_id, diary_data):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return None
-        if not diary_data.get("id"):
-            diary_data["id"] = f"d-{uuid.uuid4().hex[:6]}"
+        """Save or update a diary entry."""
         if not diary_data.get("createdAt"):
             diary_data["createdAt"] = datetime.now(timezone.utc).isoformat()
         if not diary_data.get("pattern"):
-            diary_data["pattern"] = ev.get("pattern", "pattern_kitty.png")
-
-        diary = ev.get("diaryEntries", [])
-        found = False
-        for i, d in enumerate(diary):
-            if d.get("id") == diary_data.get("id"):
-                diary[i] = diary_data
-                found = True
-                break
-        if not found:
-            diary.insert(0, diary_data)
-        ev["diaryEntries"] = diary
-        self.update_event(event_id, ev)
-        return diary_data
+            ev = self.get_event_by_id(event_id)
+            if ev:
+                diary_data["pattern"] = ev.get("pattern", DEFAULT_PATTERN)
+        
+        return self._save_event_item(event_id, diary_data, "diaryEntries", "d", insert_at_start=True)
 
     def delete_diary(self, event_id, entry_id):
-        ev = self.get_event_by_id(event_id)
-        if not ev:
-            return False
-        ev["diaryEntries"] = [d for d in ev.get("diaryEntries", []) if d.get("id") != entry_id]
-        self.update_event(event_id, ev)
-        return True
+        """Delete a diary entry."""
+        return self._delete_event_item(event_id, entry_id, "diaryEntries")
 
     # Settings
     def get_settings(self):
