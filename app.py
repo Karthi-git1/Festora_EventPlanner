@@ -1,25 +1,53 @@
+"""
+Festora - AI-Powered Smart Event Organizer
+==========================================
+
+A comprehensive event management platform with AI-powered copilot, dynamic
+category generation, budget tracking, task management, and keepsake diary.
+
+Features:
+    - AI Copilot with Groq integration and offline fallback
+    - Dynamic event categorization (Wedding, Birthday, Corporate, etc.)
+    - Smart budget tracking and allocation
+    - Task management with Asana-style interface
+    - Guest and vendor management
+    - Keepsake diary with illustrated patterns
+    - Dual storage (MongoDB + JSON fallback)
+    - WCAG 2.1 AA accessible
+    - Comprehensive security (OWASP headers, XSS prevention)
+
+Author: Festora Team
+License: MIT
+Version: 1.0.0
+"""
+
 import os
 import json
 import uuid
 import re
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify, send_from_directory, g
+from typing import Dict, List, Optional, Any, Tuple
+from flask import Flask, request, jsonify, send_from_directory, g, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import web_search
+from middleware.rate_limiter import rate_limit, rate_limiter_strict
 
+# Load environment variables
 load_dotenv()
 
+# Initialize Flask application
 app = Flask(__name__, static_folder="static", static_url_path="")
 CORS(app)
 
-MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/festora")
-DB_NAME = os.getenv("MONGODB_DB", "festora")
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
+# Configuration from environment variables
+MONGO_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017/festora")
+DB_NAME: str = os.getenv("MONGODB_DB", "festora")
+DATA_DIR: str = os.path.join(os.path.dirname(__file__), "data")
+EVENTS_FILE: str = os.path.join(DATA_DIR, "events.json")
 
-# Category presets based on event type
-CATEGORY_PRESETS = {
+# Category presets based on event type (provides starter templates)
+CATEGORY_PRESETS: Dict[str, List[str]] = {
     "wedding": [
         "Venue and Hall Booking",
         "Food and Catering",
@@ -80,10 +108,39 @@ CATEGORY_PRESETS = {
     ]
 }
 
-def generate_starter_event_data(name, event_type, date, budget, guests, currency="₹", location=""):
+
+def generate_starter_event_data(
+    name: str,
+    event_type: str,
+    date: str,
+    budget: float,
+    guests: int,
+    currency: str = "₹",
+    location: str = ""
+) -> Dict[str, Any]:
     """
-    Generates dynamic categories, starter budget allocations, tasks,
-    timeline milestones, and upcoming reminders tailored to event type.
+    Generate dynamic starter data for a new event based on type.
+    
+    Creates tailored categories, budget allocations, tasks, timeline milestones,
+    and reminders specific to the event type (wedding, birthday, corporate, etc.).
+    
+    Args:
+        name: Event name/title
+        event_type: Type of event (wedding, birthday, corporate, etc.)
+        date: Event date in ISO format
+        budget: Total event budget
+        guests: Expected number of guests
+        currency: Currency symbol (default: ₹)
+        location: Event location/venue
+        
+    Returns:
+        Dictionary containing starter data with categories, tasks, budget items,
+        timeline, and reminders tailored to the event type
+        
+    Example:
+        >>> data = generate_starter_event_data("My Wedding", "wedding", "2024-12-25", 500000, 200)
+        >>> len(data['categories'])
+        12  # Wedding has 12 categories
     """
     t_low = (event_type or "").lower().strip()
     if "wed" in t_low or "marriage" in t_low:
@@ -887,6 +944,41 @@ def static_files(path):
 
 
 # -------------------------------------------------------------
+# Health Check & Readiness Endpoint (for monitoring & reliability)
+# -------------------------------------------------------------
+@app.route("/health", methods=["GET"])
+def health_check():
+    """
+    Health check endpoint for monitoring and load balancers.
+    Returns system status including database connectivity.
+    """
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "Festora Event Planner",
+        "version": "1.0.0"
+    }
+    
+    # Check database connectivity
+    try:
+        if event_manager.use_mongo:
+            # Try a simple database operation
+            event_manager.collection.find_one(limit=1)
+            health_status["database"] = "connected (MongoDB)"
+        else:
+            health_status["database"] = "connected (JSON fallback)"
+        health_status["database_status"] = "healthy"
+    except Exception as e:
+        health_status["database_status"] = "degraded"
+        health_status["database_error"] = str(e)
+        health_status["status"] = "degraded"
+    
+    # Return 200 if healthy, 503 if degraded
+    status_code = 200 if health_status["status"] == "healthy" else 503
+    return jsonify(health_status), status_code
+
+
+# -------------------------------------------------------------
 # -------------------------------------------------------------
 # Security Headers & Global Error Handlers
 # -------------------------------------------------------------
@@ -971,6 +1063,7 @@ def get_events():
     })
 
 @app.route("/api/events", methods=["POST"])
+@rate_limit()  # Rate limit event creation
 def create_event():
     uid = get_current_user_id()
     data = request.get_json(silent=True) or {}
@@ -990,6 +1083,7 @@ def get_event(event_id):
     return jsonify(ev)
 
 @app.route("/api/events/<event_id>", methods=["PUT"])
+@rate_limit()  # Rate limit event updates
 def update_event(event_id):
     uid = get_current_user_id()
     data = request.get_json(silent=True) or {}
@@ -999,6 +1093,7 @@ def update_event(event_id):
     return jsonify({"success": True, "event": updated})
 
 @app.route("/api/events/<event_id>", methods=["DELETE"])
+@rate_limit()  # Rate limit event deletion
 def delete_event(event_id):
     uid = get_current_user_id()
     success = event_manager.delete_event(event_id, user_id=uid)
@@ -1372,6 +1467,7 @@ def create_event_from_ai_prompt(user_prompt, user_id=None):
     return saved
 
 @app.route("/api/events/<event_id>/ai/copilot", methods=["POST"])
+@rate_limit(rate_limiter_strict)  # Strict rate limit for AI endpoint (20 req/min)
 def event_ai_copilot(event_id):
     """
     Intelligent event organizer for the active celebration.
